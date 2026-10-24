@@ -1,0 +1,7 @@
+# 统一换行符，避免 Windows 开发、Linux 评审时的整文件 diff
+* text=auto eol=lf
+
+# 二进制资源不做行尾转换
+*.png binary
+*.jpg binary
+*.gif binary

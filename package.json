@@ -1,0 +1,21 @@
+{
+  "name": "svg-editor-cli",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PJ1 Phase 1 - a command-line SVG editor written in TypeScript",
+  "license": "MIT",
+  "main": "dist/src/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "cli": "tsc -p tsconfig.json && node dist/src/main.js",
+    "start": "node dist/src/main.js",
+    "test": "npm run build --silent && node scripts/check-dependencies.mjs && node --test dist/tests",
+    "check:deps": "node scripts/check-dependencies.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
+}
