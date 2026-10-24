@@ -1,9 +1,20 @@
-/**
- * 程序入口（脚手架阶段）。
- *
- * 本阶段只负责打印启动横幅，用来验证 "npm run build → node dist/src/main.js"
- * 这条链路是通的。REPL / 命令分发会在后续提交里替换掉这里的内容。
- */
-const BANNER = "svg-editor 0.1 — type 'help' for commands";
+import { EditorSession } from './app/EditorSession';
+import { CliApplication } from './cli/CliApplication';
+import { CommandDispatcher } from './cli/CommandDispatcher';
+import { ConsoleOutput } from './cli/OutputPort';
+import { Repl } from './cli/Repl';
+import { createDefaultShapeTypeRegistry } from './core/registry/createDefaultShapeTypeRegistry';
+import { NodeFileStore } from './io/NodeFileStore';
 
-process.stdout.write(`${BANNER}\n`);
+const registry = createDefaultShapeTypeRegistry();
+const session = new EditorSession({ registry, fileStore: new NodeFileStore() });
+const output = new ConsoleOutput();
+const application = new CliApplication(new CommandDispatcher(session, registry), output);
+const interactive = Boolean(process.stdin.isTTY);
+
+process.on('SIGINT', () => {
+  process.stdout.write('\n');
+  process.exit(0);
+});
+
+new Repl({ input: process.stdin, output, promptStream: process.stdout, interactive }, application).start();
