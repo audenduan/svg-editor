@@ -1,0 +1,7 @@
+# 最小演示：新建画布 → 两个图形 → 结构树 → 保存
+# 回放：npm run cli < examples/hello.txt
+init 400 200
+create rect r1 10 20 100 50 #eee
+create text t1 20 40 "My Diagram"
+tree
+save examples/hello.svg

@@ -1,0 +1,8 @@
+# read 回放示例：读取 others.svg（含缺 id、中文、复合图元）→ 结构树 → 保存副本
+# 回放：node dist/src/main.js < examples/other-session.txt
+read examples/other.svg
+tree
+show g1
+move g1 0 10
+undo
+save examples/other-copy.svg
