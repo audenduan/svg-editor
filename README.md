@@ -111,7 +111,13 @@ examples/   可直接回放的命令脚本与示例 SVG
 
 ## Git 历史
 
+开发过程共 13 个提交，自底向上：
+
 ```
+（最终版本打 final 标签）
+docs: submission document and final tag
+0476dc4 docs(examples): replayable scripts and sample outputs
+f09725d docs: user manual and design document
 21d6c8b chore(scripts): dependency discipline checker
 be4118f feat(tests): node:test suite (54 cases)
 ed9e3be feat(cli): REPL, dispatcher, help
@@ -123,5 +129,3 @@ ed9e3be feat(cli): REPL, dispatcher, help
 eb72672 feat(model): shape hierarchy with composite containers
 320a9a6 chore: scaffold TypeScript CLI project
 ```
-
-（另有一个未列出的 docs 提交，记录需求分析与架构方案。）
