@@ -160,9 +160,17 @@ src/
 
 ---
 
-## 5. 后续阶段（Phase 2+ 候选）
+## 5. Phase 2：插件化改造（已完成）
 
-- 插件样例（box → detail / treeAnnotation），用真实例子验证三个扩展点；
-- `defs` 引用解析、单位长度入模型（去掉两个已知 round-trip 限制）；
-- `up/down` 属性语义的完整支持；
-- 撤销树 / 多文档。
+Phase 1 的四项要求（架构方案 / 与 AI 协作的过程记录 / 实现后的一致性自查 / 功能完整性与质量保证手段）即上文第 1–4 节。
+Phase 2 在同一仓库上继续演进，文档独立成篇：
+
+| 文档 | 内容 |
+|---|---|
+| [`extension-points.md`](extension-points.md) | 扩展点清单：四个扩展点的接口、注册方式、内核消费点与错误文案；两种装配方式与清单格式 |
+| [`iteration-report.md`](iteration-report.md) | 迭代报告：Phase 1 → Phase 2 架构对比图、提交链、返工记录、指标与质量闸门 |
+| [`adr.md`](adr.md) | 七条架构决策记录（接口 vs 继承、注册原子性、标签变体、处理器优先级、装配等价性、加载器分层、钩子预置） |
+| [`../vscode-svg/README.md`](../vscode-svg/README.md) | VSCode 扩展（`.svg` 徽标 + 结构大纲）的编译、测试、启动与截图步骤 |
+| [`../vscode-svg/analysis.md`](../vscode-svg/analysis.md) | VSCode 扩展的复用性分析（A.3） |
+
+Phase 2 之后仍未覆盖的候选方向：`defs` 引用解析、单位长度入模型、`up/down` 完整语义、撤销树 / 多文档。

@@ -30,9 +30,29 @@ svg (800x600)
 
 ```bash
 npm install
-npm run cli          # 交互式 REPL（svg> 提示符）
+npm run cli          # 交互式 REPL（svg> 提示符），仅内置插件
 npm run cli < script # 脚本回放：以 # 开头的行是注释，逐行执行
-npm test             # 构建 → 依赖纪律检查 → 54 个测试用例
+npm test             # 构建 → 依赖纪律检查 → 分层检查 → 102 个测试用例
+```
+
+### Phase 2：插件化的两种装配方式
+
+```bash
+# 方式 A（改代码）：在 src/main-code.ts 里 import 插件，然后
+npm run build && npm run start:code
+
+# 方式 B（改配置）：把插件写进 config/plugins.json，然后
+npm run build && npm run start:config     # = node dist/src/main.js --config config/plugins.json
+```
+
+两种方式产出**逐字节相同**的输出（由 `tests/assembly.test.ts` 用真实进程比对）。
+配置文件格式与 `entry` 解析规则见 [`doc/extension-points.md`](doc/extension-points.md)；
+运行 `npm run start:config < examples/plugin-demo.txt` 可以看到 `box`、`stats`、`dir` 三个插件命令。
+
+```bash
+npm test:vscode      # 编译并测试 VSCode 扩展（vscode-svg/）
+npm run check:layers # 分层依赖检查（内核不依赖上层、插件不碰装配层）
+npm run metrics      # 从 git 历史重新生成 docs/metrics
 ```
 
 输出约定：
@@ -40,6 +60,7 @@ npm test             # 构建 → 依赖纪律检查 → 54 个测试用例
 - 每条命令的输出是一行或多行文本；**所有错误都以 `error:` 前缀**输出，且失败不改变任何状态。
 - 带空格的内容参数用双引号包裹：`create text t1 20 40 "My Diagram"`。
 - 每个图形有唯一 `id`；命令只按 id 定位图形。
+- 插件缺失时的错误可区分：命令缺失是 `unknown command: …`，图形类型缺失是 `unknown shape type: … (is the plugin loaded?)`。
 
 ## 命令参考
 
