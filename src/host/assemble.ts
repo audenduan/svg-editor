@@ -61,8 +61,7 @@ export function activatePlugin(extensions: ExtensionRegistry, plugin: Plugin): v
   }
 }
 
-/** 命令执行时读到的内核只读视图（每次执行重建，`help` 因此总能看到最新命令表）。 */
-export function buildCommandContext(
+/** 命令执行时读到的内核只读视图（每次执行重建，`help` 因此总能看到最新命令表）。 */export function buildCommandContext(
   extensions: ExtensionRegistry,
   session: EditorSession,
 ): CommandContext {

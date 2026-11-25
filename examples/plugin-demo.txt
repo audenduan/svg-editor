@@ -1,0 +1,7 @@
+init 400 200
+create box n1 10 20 100 40 start
+create rect r 0 0 5 5
+stats
+tree
+dir
+save out.svg

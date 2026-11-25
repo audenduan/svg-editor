@@ -8,31 +8,31 @@
 
 | 类别 | 基线行数 | 当前行数 | 增量 |
 |---|---|---|---|
-| 内核 | 2593 | 3157 | +564 |
-| 装配处 | 431 | 480 | +49 |
+| 内核 | 2593 | 3443 | +850 |
+| 装配处 | 431 | 579 | +148 |
 | 插件 | 0 | 768 | +768 |
 | VSCode 扩展 | 0 | 593 | +593 |
-| 其他 | 955 | 1257 | +302 |
+| 其他 | 955 | 1434 | +479 |
 
 ## 按类别：文件数
 
 | 类别 | 基线 | 当前 | 增量 |
 |---|---|---|---|
-| 内核 | 44 | 52 | +8 |
-| 装配处 | 7 | 9 | +2 |
+| 内核 | 44 | 54 | +10 |
+| 装配处 | 7 | 10 | +3 |
 | 插件 | 0 | 11 | +11 |
 | VSCode 扩展 | 0 | 5 | +5 |
-| 其他 | 9 | 11 | +2 |
+| 其他 | 9 | 14 | +5 |
 
 ## 按类别：圈复杂度增量（判断点计数）
 
 | 类别 | 基线 | 当前 | 增量 |
 |---|---|---|---|
-| 内核 | 228 | 275 | +47 |
-| 装配处 | 31 | 35 | +4 |
+| 内核 | 228 | 329 | +101 |
+| 装配处 | 31 | 46 | +15 |
 | 插件 | 0 | 35 | +35 |
 | VSCode 扩展 | 0 | 61 | +61 |
-| 其他 | 10 | 13 | +3 |
+| 其他 | 10 | 20 | +10 |
 
 ## 文件清单与职责（当前）
 
@@ -44,9 +44,10 @@
 | `src/cli/HelpText.ts` | 装配处 | 20 | 1 |
 | `src/cli/OutputPort.ts` | 装配处 | 13 | 0 |
 | `src/cli/Repl.ts` | 装配处 | 51 | 4 |
-| `src/host/assemble.ts` | 装配处 | 78 | 3 |
+| `src/host/assemble.ts` | 装配处 | 77 | 3 |
 | `src/host/builtinPlugin.ts` | 装配处 | 169 | 12 |
-| `src/main.ts` | 装配处 | 17 | 0 |
+| `src/host/NodePluginModuleLoader.ts` | 装配处 | 47 | 1 |
+| `src/main.ts` | 装配处 | 70 | 10 |
 | `src/app/EditorSession.ts` | 内核 | 335 | 42 |
 | `src/core/command/AddToContainerCommand.ts` | 内核 | 34 | 1 |
 | `src/core/command/Command.ts` | 内核 | 15 | 0 |
@@ -60,6 +61,8 @@
 | `src/core/command/SetAttributeCommand.ts` | 内核 | 54 | 6 |
 | `src/core/command/ShapeStateRecorder.ts` | 内核 | 35 | 3 |
 | `src/core/command/UngroupShapeCommand.ts` | 内核 | 50 | 4 |
+| `src/core/config/PluginManifestLoader.ts` | 内核 | 204 | 36 |
+| `src/core/config/posixPath.ts` | 内核 | 82 | 18 |
 | `src/core/errors/EditorError.ts` | 内核 | 14 | 0 |
 | `src/core/model/Circle.ts` | 内核 | 16 | 0 |
 | `src/core/model/ContainerShape.ts` | 内核 | 109 | 7 |
@@ -99,8 +102,11 @@
 | `src/io/xml/XmlParser.ts` | 内核 | 227 | 47 |
 | `src/render/ShowRenderer.ts` | 内核 | 9 | 0 |
 | `src/render/TreeRenderer.ts` | 内核 | 71 | 5 |
+| `src/main-code.ts` | 其他 | 28 | 0 |
+| `tests/assembly.test.ts` | 其他 | 97 | 5 |
 | `tests/command.test.ts` | 其他 | 223 | 0 |
 | `tests/composition.test.ts` | 其他 | 137 | 1 |
+| `tests/configLoader.test.ts` | 其他 | 52 | 2 |
 | `tests/errors.test.ts` | 其他 | 133 | 2 |
 | `tests/extensions.test.ts` | 其他 | 147 | 2 |
 | `tests/geometry.test.ts` | 其他 | 126 | 1 |

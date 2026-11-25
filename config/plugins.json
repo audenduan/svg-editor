@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "plugins": [
+    {
+      "name": "@svgframe/plugin-shape-box",
+      "entry": "builtin:shape-box",
+      "contributes": {
+        "shapes": ["box"],
+        "attributes": ["box-fill", "box-label"],
+        "decorators": ["box-type-label"]
+      }
+    },
+    {
+      "name": "@svgframe/plugin-command-stats",
+      "entry": "builtin:command-stats",
+      "contributes": {
+        "commands": ["stats"]
+      }
+    },
+    {
+      "name": "@svgframe/plugin-command-dir",
+      "entry": "builtin:command-dir",
+      "contributes": {
+        "commands": ["dir"]
+      }
+    }
+  ]
+}

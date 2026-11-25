@@ -19,24 +19,24 @@
     }
   },
   "headBuckets": {
+    "kernel": {
+      "files": 54,
+      "lines": 3443,
+      "decisions": 329
+    },
+    "assembly": {
+      "files": 10,
+      "lines": 579,
+      "decisions": 46
+    },
     "other": {
-      "files": 11,
-      "lines": 1257,
-      "decisions": 13
+      "files": 14,
+      "lines": 1434,
+      "decisions": 20
     },
     "plugin": {
       "files": 11,
       "lines": 768,
-      "decisions": 35
-    },
-    "kernel": {
-      "files": 52,
-      "lines": 3157,
-      "decisions": 275
-    },
-    "assembly": {
-      "files": 9,
-      "lines": 480,
       "decisions": 35
     },
     "vscode": {
