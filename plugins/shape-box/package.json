@@ -1,0 +1,12 @@
+{
+  "name": "@svgframe/plugin-shape-box",
+  "version": "0.2.0",
+  "private": true,
+  "description": "box composite shape plugin for the svgframe CLI",
+  "main": "src/index.ts",
+  "contributes": {
+    "shapes": ["box"],
+    "attributes": ["box-fill", "box-label"],
+    "decorators": ["box-type-label"]
+  }
+}
