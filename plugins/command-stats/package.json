@@ -1,0 +1,10 @@
+{
+  "name": "@svgframe/plugin-command-stats",
+  "version": "0.2.0",
+  "private": true,
+  "description": "stats command plugin (shape census) for the svgframe CLI",
+  "main": "src/index.ts",
+  "contributes": {
+    "commands": ["stats"]
+  }
+}

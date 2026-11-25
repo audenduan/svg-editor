@@ -10,6 +10,7 @@
 |---|---|---|---|
 | 内核 | 2593 | 3079 | +486 |
 | 装配处 | 431 | 480 | +49 |
+| 插件 | 0 | 324 | +324 |
 | VSCode 扩展 | 0 | 593 | +593 |
 | 其他 | 955 | 1120 | +165 |
 
@@ -19,6 +20,7 @@
 |---|---|---|---|
 | 内核 | 44 | 52 | +8 |
 | 装配处 | 7 | 9 | +2 |
+| 插件 | 0 | 5 | +5 |
 | VSCode 扩展 | 0 | 5 | +5 |
 | 其他 | 9 | 10 | +1 |
 
@@ -28,6 +30,7 @@
 |---|---|---|---|
 | 内核 | 228 | 261 | +33 |
 | 装配处 | 31 | 35 | +4 |
+| 插件 | 0 | 13 | +13 |
 | VSCode 扩展 | 0 | 61 | +61 |
 | 其他 | 10 | 12 | +2 |
 
@@ -106,6 +109,11 @@
 | `tests/support/MemoryFileStore.ts` | 其他 | 35 | 2 |
 | `tests/support/testHarness.ts` | 其他 | 45 | 1 |
 | `tests/transcript.test.ts` | 其他 | 185 | 0 |
+| `plugins/command-dir/src/directoryAccess.ts` | 插件 | 46 | 4 |
+| `plugins/command-dir/src/index.ts` | 插件 | 64 | 2 |
+| `plugins/command-dir/tests/dir.test.ts` | 插件 | 108 | 2 |
+| `plugins/command-stats/src/index.ts` | 插件 | 55 | 4 |
+| `plugins/command-stats/tests/stats.test.ts` | 插件 | 51 | 1 |
 | `vscode-svg/src/extension.ts` | VSCode 扩展 | 53 | 1 |
 | `vscode-svg/src/fileDecorationProvider.ts` | VSCode 扩展 | 53 | 3 |
 | `vscode-svg/src/outlineParser.ts` | VSCode 扩展 | 276 | 46 |

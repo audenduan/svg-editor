@@ -1,0 +1,10 @@
+{
+  "name": "@svgframe/plugin-command-dir",
+  "version": "0.2.0",
+  "private": true,
+  "description": "dir command plugin for the svgframe CLI (adapter over node:fs)",
+  "main": "src/index.ts",
+  "contributes": {
+    "commands": ["dir"]
+  }
+}
