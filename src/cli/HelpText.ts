@@ -1,11 +1,11 @@
-import type { CommandEntry } from './CommandDispatcher';
+import type { CommandBrief } from '../core/plugin/CommandExtension';
 
-/** `help` 输出：全部命令 + 内置图形类型 + 约定提示。 */
+/** `help` 输出：全部命令 + 已注册图形类型 + 约定提示。 */
 export class HelpText {
-  public lines(entries: readonly CommandEntry[], shapeTypes: readonly string[]): string[] {
+  public lines(commands: readonly CommandBrief[], shapeTypes: readonly string[]): string[] {
     const lines = ['commands:'];
-    for (const entry of entries) {
-      lines.push(`  ${entry.usage.padEnd(46)}${entry.summary}`);
+    for (const command of commands) {
+      lines.push(`  ${command.usage.padEnd(46)}${command.summary}`);
     }
     lines.push('');
     lines.push(`shape types (create <type> <id> …): ${shapeTypes.join(' ')}`);

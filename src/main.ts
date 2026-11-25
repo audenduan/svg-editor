@@ -1,15 +1,12 @@
-import { EditorSession } from './app/EditorSession';
-import { CliApplication } from './cli/CliApplication';
-import { CommandDispatcher } from './cli/CommandDispatcher';
 import { ConsoleOutput } from './cli/OutputPort';
 import { Repl } from './cli/Repl';
-import { createDefaultShapeTypeRegistry } from './core/registry/createDefaultShapeTypeRegistry';
+import { assembleCli } from './host/assemble';
 import { NodeFileStore } from './io/NodeFileStore';
 
-const registry = createDefaultShapeTypeRegistry();
-const session = new EditorSession({ registry, fileStore: new NodeFileStore() });
+// 组合根（方式 A：改代码装配）。Phase 2 的插件在这里 activate：
+//   const ctx = createPluginContext(); shapeBox.activate(ctx); …
 const output = new ConsoleOutput();
-const application = new CliApplication(new CommandDispatcher(session, registry), output);
+const assembled = assembleCli({ fileStore: new NodeFileStore(), output });
 const interactive = Boolean(process.stdin.isTTY);
 
 process.on('SIGINT', () => {
@@ -17,4 +14,4 @@ process.on('SIGINT', () => {
   process.exit(0);
 });
 
-new Repl({ input: process.stdin, output, promptStream: process.stdout, interactive }, application).start();
+new Repl({ input: process.stdin, output, promptStream: process.stdout, interactive }, assembled.application).start();

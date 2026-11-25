@@ -1,0 +1,43 @@
+{
+  "base": "final",
+  "head": "WORKTREE",
+  "baseBuckets": {
+    "kernel": {
+      "files": 44,
+      "lines": 2593,
+      "decisions": 228
+    },
+    "assembly": {
+      "files": 7,
+      "lines": 431,
+      "decisions": 31
+    },
+    "other": {
+      "files": 9,
+      "lines": 955,
+      "decisions": 10
+    }
+  },
+  "headBuckets": {
+    "kernel": {
+      "files": 52,
+      "lines": 3079,
+      "decisions": 261
+    },
+    "assembly": {
+      "files": 9,
+      "lines": 480,
+      "decisions": 35
+    },
+    "other": {
+      "files": 10,
+      "lines": 1120,
+      "decisions": 12
+    },
+    "vscode": {
+      "files": 5,
+      "lines": 593,
+      "decisions": 61
+    }
+  }
+}

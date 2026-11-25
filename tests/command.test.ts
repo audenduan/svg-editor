@@ -75,7 +75,12 @@ test('set 撤销还原旧值（text 内容 + 样式）', () => {
   const history = new CommandHistory();
   const t = new TextShape('t1', 'My Diagram');
   doc.appendChild(t);
-  history.run(new SetAttributeCommand(t, 'text', 'My Diagram v2'));
+  history.run(
+    new SetAttributeCommand(t, 'text', 'My Diagram v2', null, {
+      findShape: () => null,
+      touch: () => {},
+    }),
+  );
   assert.equal(t.getAttribute('text'), 'My Diagram v2');
   assert.equal(history.undo(), 'text#t1 updated: text="My Diagram"');
   assert.equal(t.getAttribute('text'), 'My Diagram');

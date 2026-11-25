@@ -39,7 +39,4 @@ export interface ShapeProvider {
 
   /** 从 SVG 元素还原（属性顺序、未知属性保留、text 内容回填）。 */
   restore(request: ShapeRestoreRequest): Shape;
-
-  /** tree 行内的类型标注；内置类型返回空串，插件类型可返回 ` (box)` 之类。 */
-  treeAnnotation(shape: Shape): string;
 }

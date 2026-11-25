@@ -14,7 +14,8 @@ import { formatNumber } from '../core/model/numbers';
 import type { Shape } from '../core/model/Shape';
 import type { ShapeContainer } from '../core/model/ShapeContainer';
 import { SvgDocument } from '../core/model/SvgDocument';
-import type { ShapeTypeRegistry } from '../core/registry/ShapeTypeRegistry';
+import type { AttributeApplyContext } from '../core/plugin/AttributeHandler';
+import type { ExtensionRegistry } from '../core/plugin/ExtensionRegistry';
 import type { FileStore } from '../io/FileStore';
 import { SvgReader } from '../io/SvgReader';
 import { SvgWriter } from '../io/SvgWriter';
@@ -22,7 +23,8 @@ import { ShowRenderer } from '../render/ShowRenderer';
 import { TreeRenderer } from '../render/TreeRenderer';
 
 export interface EditorSessionOptions {
-  readonly registry: ShapeTypeRegistry;
+  /** 四类扩展的统一存放处（图形类型、命令表之外的装饰器/属性处理器都从这里取）。 */
+  readonly extensions: ExtensionRegistry;
   readonly fileStore: FileStore;
 }
 
@@ -30,7 +32,10 @@ export interface EditorSessionOptions {
  * 应用层门面：一条命令 = 一个方法，方法返回**面向用户的输出行**。
  *
  * 它负责三件事：当前文档状态与 IO（文档类命令）、前置校验（需求 4.2 的错误表）、
- * 把编辑命令包进 `CommandHistory`（编辑类命令）。CLI 层不接触模型，只做参数解析与分发。
+ * 把编辑命令包进 `CommandHistory`（编辑类命令）。命令实现（CLI 侧）不接触模型。
+ *
+ * Phase 2 起它只依赖扩展点接口：图形类型走 `ExtensionRegistry.shapeRegistry`，
+ * `set` 先问 `AttributeHandlerRegistry`，`tree` 的行尾标签来自 `TreeDecoratorRegistry`。
  */
 export class EditorSession {
   private readonly history = new CommandHistory();
@@ -39,7 +44,19 @@ export class EditorSession {
   private documentValue: SvgDocument | null = null;
 
   public constructor(private readonly options: EditorSessionOptions) {
-    this.treeRenderer = new TreeRenderer(options.registry);
+    this.treeRenderer = new TreeRenderer(options.extensions.decoratorRegistry);
+  }
+
+  /** 当前文档（命令插件通过 `CommandContext` 读它）。 */
+  public get document(): SvgDocument | null {
+    return this.documentValue;
+  }
+
+  /** 已注册图形类型名（注册顺序），供 `help` 展示。 */
+  public get shapeTypeNames(): readonly string[] {
+    return this.options.extensions.shapeRegistry
+      .listProviders()
+      .map((provider) => provider.typeName);
   }
 
   // ------------------------------------------------------------------
@@ -52,15 +69,17 @@ export class EditorSession {
     }
     this.documentValue = new SvgDocument(width, height);
     this.history.resetAfterIo();
+    this.options.extensions.decoratorRegistry.notifyDocumentReplaced();
     return [`canvas ${formatNumber(width)}x${formatNumber(height)} created`];
   }
 
   public read(path: string): string[] {
     const text = this.options.fileStore.read(path);
-    const result = new SvgReader(this.options.registry).read(text);
+    const result = new SvgReader(this.options.extensions.shapeRegistry).read(text);
     result.document.sourcePath = path;
     this.documentValue = result.document;
     this.history.resetAfterIo();
+    this.options.extensions.decoratorRegistry.notifyDocumentReplaced();
     const lines = result.warnings.map((warning) => `warning: ${warning}`);
     lines.push(`read ${path} (${result.document.elementCount()} elements)`);
     return lines;
@@ -76,6 +95,8 @@ export class EditorSession {
     this.options.fileStore.write(target, xml);
     document.sourcePath = target;
     this.history.lockAfterIo();
+    // 保存成功后再通知装饰器：`modified-star` 以此刻的内容为"已保存基线"。
+    this.options.extensions.decoratorRegistry.notifySaved();
     return [`saved to ${target} (${document.elementCount()} elements)`];
   }
 
@@ -110,7 +131,7 @@ export class EditorSession {
       throw new EditorError(`id already exists: ${id}`);
     }
     const parent = this.resolveContainer(document, containerId);
-    const shape = this.options.registry.createShape(typeName, id, params);
+    const shape = this.options.extensions.shapeRegistry.createShape(typeName, id, params);
     return [this.history.run(new CreateShapeCommand(shape, parent))];
   }
 
@@ -132,9 +153,25 @@ export class EditorSession {
     return [this.history.run(new ScaleShapeCommand(shape, factor))];
   }
 
+  /**
+   * `set` 的属性设置流程（phase_cli_2 §3.2）：
+   * 先询问已注册的 `AttributeHandler`（按注册顺序，首个命中独占），
+   * 没有命中才走 Phase 1 的默认白名单规则。
+   */
   public setAttribute(id: string, attributeName: string, value: string): string[] {
+    const document = this.requireDocument();
     const shape = this.requireShape(id);
-    return [this.history.run(new SetAttributeCommand(shape, attributeName, value))];
+    const handler = this.options.extensions.attributeHandlerRegistry.findHandler(shape, attributeName);
+    const touched: Shape[] = [];
+    const context: AttributeApplyContext = {
+      findShape: (shapeId) => document.findShape(shapeId),
+      touch: (target) => {
+        if (!touched.includes(target)) {
+          touched.push(target);
+        }
+      },
+    };
+    return [this.history.run(new SetAttributeCommand(shape, attributeName, value, handler, context))];
   }
 
   public groupShapes(newGroupId: string, memberIds: readonly string[]): string[] {
@@ -165,7 +202,7 @@ export class EditorSession {
         }
       }
     }
-    const group = this.options.registry.createShape('g', newGroupId, []).asContainer();
+    const group = this.options.extensions.shapeRegistry.createShape('g', newGroupId, []).asContainer();
     if (group === null) {
       throw new Error('g provider must produce a container');
     }

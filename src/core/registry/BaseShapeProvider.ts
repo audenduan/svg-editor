@@ -54,8 +54,4 @@ export abstract class BaseShapeProvider implements ShapeProvider {
     }
     return shape;
   }
-
-  public treeAnnotation(_shape: Shape): string {
-    return '';
-  }
 }
