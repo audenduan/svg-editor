@@ -10,9 +10,9 @@
 |---|---|---|---|
 | 内核 | 2593 | 3157 | +564 |
 | 装配处 | 431 | 480 | +49 |
-| 插件 | 0 | 324 | +324 |
+| 插件 | 0 | 768 | +768 |
 | VSCode 扩展 | 0 | 593 | +593 |
-| 其他 | 955 | 1120 | +165 |
+| 其他 | 955 | 1257 | +302 |
 
 ## 按类别：文件数
 
@@ -20,9 +20,9 @@
 |---|---|---|---|
 | 内核 | 44 | 52 | +8 |
 | 装配处 | 7 | 9 | +2 |
-| 插件 | 0 | 5 | +5 |
+| 插件 | 0 | 11 | +11 |
 | VSCode 扩展 | 0 | 5 | +5 |
-| 其他 | 9 | 10 | +1 |
+| 其他 | 9 | 11 | +2 |
 
 ## 按类别：圈复杂度增量（判断点计数）
 
@@ -30,9 +30,9 @@
 |---|---|---|---|
 | 内核 | 228 | 275 | +47 |
 | 装配处 | 31 | 35 | +4 |
-| 插件 | 0 | 13 | +13 |
+| 插件 | 0 | 35 | +35 |
 | VSCode 扩展 | 0 | 61 | +61 |
-| 其他 | 10 | 12 | +2 |
+| 其他 | 10 | 13 | +3 |
 
 ## 文件清单与职责（当前）
 
@@ -100,6 +100,7 @@
 | `src/render/ShowRenderer.ts` | 内核 | 9 | 0 |
 | `src/render/TreeRenderer.ts` | 内核 | 71 | 5 |
 | `tests/command.test.ts` | 其他 | 223 | 0 |
+| `tests/composition.test.ts` | 其他 | 137 | 1 |
 | `tests/errors.test.ts` | 其他 | 133 | 2 |
 | `tests/extensions.test.ts` | 其他 | 147 | 2 |
 | `tests/geometry.test.ts` | 其他 | 126 | 1 |
@@ -114,6 +115,12 @@
 | `plugins/command-dir/tests/dir.test.ts` | 插件 | 108 | 2 |
 | `plugins/command-stats/src/index.ts` | 插件 | 55 | 4 |
 | `plugins/command-stats/tests/stats.test.ts` | 插件 | 51 | 1 |
+| `plugins/shape-box/src/BoxAttributeHandlers.ts` | 插件 | 53 | 7 |
+| `plugins/shape-box/src/BoxProvider.ts` | 插件 | 88 | 9 |
+| `plugins/shape-box/src/BoxShape.ts` | 插件 | 69 | 0 |
+| `plugins/shape-box/src/BoxTypeLabel.ts` | 插件 | 15 | 0 |
+| `plugins/shape-box/src/index.ts` | 插件 | 22 | 0 |
+| `plugins/shape-box/tests/box.test.ts` | 插件 | 197 | 6 |
 | `vscode-svg/src/extension.ts` | VSCode 扩展 | 53 | 1 |
 | `vscode-svg/src/fileDecorationProvider.ts` | VSCode 扩展 | 53 | 3 |
 | `vscode-svg/src/outlineParser.ts` | VSCode 扩展 | 276 | 46 |

@@ -19,10 +19,15 @@
     }
   },
   "headBuckets": {
-    "plugin": {
-      "files": 5,
-      "lines": 324,
+    "other": {
+      "files": 11,
+      "lines": 1257,
       "decisions": 13
+    },
+    "plugin": {
+      "files": 11,
+      "lines": 768,
+      "decisions": 35
     },
     "kernel": {
       "files": 52,
@@ -33,11 +38,6 @@
       "files": 9,
       "lines": 480,
       "decisions": 35
-    },
-    "other": {
-      "files": 10,
-      "lines": 1120,
-      "decisions": 12
     },
     "vscode": {
       "files": 5,
