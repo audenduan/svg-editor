@@ -16,7 +16,7 @@ Phase 2 要求把 Phase 1 的单体 CLI 改造成**插件化架构**，四个扩
 |---|---|---|---|
 | 1 | 四个扩展点各有一个非平凡实现 | 见 §4 表格 | ✅ 4/4 |
 | 2 | 两种装配方式的输出逐字节相同 | `tests/assembly.test.ts` 起真实进程比较 | ✅ |
-| 3 | 未加载插件时与 Phase 1 逐字节相同 | Phase 1 的 54 个用例**原样**全绿 + 结构树行尾无多余空格 | ✅ |
+| 3 | 未加载插件时与 Phase 1 逐字节相同 | Phase 1 的 54 个用例全部通过，其中**断言原文 0 改动**（唯一改动是一个构造函数调用多了两个参数，见 §3.1）| ✅ |
 | 4 | 接入插件不需要改内核 | `git show --stat c082226 -- src` 输出为空 | ✅ |
 | 5 | 错误可区分 | `unknown command` / `unknown shape type` / `duplicate registration` / `cannot load plugin` | ✅ |
 | 6 | 注册原子性 | 冲突或 activate 抛错时不留半个插件 | ✅ |
@@ -114,7 +114,7 @@ Phase 2 要求把 Phase 1 的单体 CLI 改造成**插件化架构**，四个扩
 
 | # | 提交 | 内容 | 测试数 | 说明 |
 |---|---|---|---|---|
-| 0 | `47b23c6` | `feat(framework)`: 四个扩展点 + 注册表 + 暂存注册 | 60 | Phase 1 命令迁入 `builtinPlugin`；54 个旧用例原样通过 |
+| 0 | `47b23c6` | `feat(framework)`: 四个扩展点 + 注册表 + 暂存注册 | 60 | Phase 1 命令迁入 `builtinPlugin`；54 个旧用例除一处构造参数外原样通过 |
 | 1 | `1f5761d` | `feat(vscode)`: `.svg` 徽标 + 结构大纲 | 60 + 5 | VSCode 扩展独立编译与测试 |
 | 2 | `d7a409c` | `feat(plugins)`: `stats`、`dir`（含目录适配器） | 70 | 两个命令插件，`dir` 用适配器隔离文件系统 |
 | 3 | `dd9286c` | `feat(framework)`: 标签变体 / 派生 id / 子部件保护 | 70 | 为"零内核改动接入 box"预先准备通用钩子 |
@@ -125,8 +125,10 @@ Phase 2 要求把 Phase 1 的单体 CLI 改造成**插件化架构**，四个扩
 
 ### 3.1 过程中的三次真实返工（都已固化在提交链里）
 
-1. **`SetAttributeCommand` 签名变更**带来 Phase 1 测试的编译错误。处理方式不是改测试的期望，
-   而是把新增参数设为可选路径上的显式 `null` + 空上下文——保留 Phase 1 断言原文，证明行为没变。
+1. **`SetAttributeCommand` 签名变更**带来 Phase 1 测试的编译错误。处理方式不是改期望值，
+   而是在构造调用里补上显式的 `null` 处理器与空上下文（`findShape: () => null, touch: () => {}`）。
+   **`tests/command.test.ts` 是唯一被修改的 Phase 1 测试文件，diff 为 6 增 1 删，全部是构造参数**；
+   所有 `assert` 断言与期望字符串一字未动——这是"行为没漂移"的证据形式。
 2. **共用元素标签**：`box` 想序列化成 `<g data-kind="box">`，但 `ShapeTypeRegistry` 原本一个标签只能一个类型。
    先补了通用钩子（提交 3），再写插件（提交 4），而不是在插件里塞内核特例。
 3. **Windows 路径与 BOM**：清单加载器最初用 `path` 的语义处理 `\`，导致盘符被当作目录名；
@@ -156,7 +158,7 @@ Phase 2 要求把 Phase 1 的单体 CLI 改造成**插件化架构**，四个扩
 
 | 层级 | 文件 | 覆盖 |
 |---|---|---|
-| Phase 1 回归 | `tests/*.test.ts`（原有） | 54 个用例**未做任何修改**全部通过 |
+| Phase 1 回归 | `tests/*.test.ts`（原有） | 54 个用例全部通过，断言期望值一字未改（唯一 diff 是 `SetAttributeCommand` 的构造参数） |
 | 框架 | `tests/extensions.test.ts` | 四个扩展点的注册/冲突回滚/处理器优先级/失败回滚 |
 | 装饰器契约 | `tests/decorators.test.ts` | `modified-star` 形态示例：`onSaved`/`onDocumentReplaced` 复位、空串不留空格 |
 | 组合 | `tests/composition.test.ts` | 跨插件协作、缺插件退化、顺序无关、基线字节 |
@@ -173,8 +175,14 @@ tsc（strict, noUnusedLocals, noUnusedParameters, noFallthroughCasesInSwitch）
   → node --test              102 个用例
 ```
 
-`check-layers.mjs` 是这次新增的：把"插件化"从口头约束变成 CI 约束——
-它能捕获"某天有人为了图省事在内核里 `if (typeName === 'box')`"这类退化。
+`check-layers.mjs` 是这次新增的：把"插件化"从口头约束变成 CI 约束。
+需要说清它的能力边界——它检查的是 **import 关系**（内核不 import 上层或插件、插件不 import 装配层），
+**不检查**"内核里内联写了某个具体类型名"。后者目前只能靠人工 grep 与代码审查保证：
+
+```bash
+# 期望没有任何命中（注释除外）
+grep -rn "'box'\|'stats'\|'dir'" src/core src/app src/render src/io
+```
 
 ### 5.3 指标（由 `scripts/metrics.mjs` 从 git 历史生成，不接受手填）
 
@@ -191,7 +199,8 @@ tsc（strict, noUnusedLocals, noUnusedParameters, noFallthroughCasesInSwitch）
 
 ### 5.4 判据自检
 
-- 内核里没有任何具体类型名分支（`check-layers` 与人工 grep 双重确认）；
+- 内核里没有任何具体类型名分支：`src/core`、`src/app`、`src/render`、`src/io` 里
+  `grep -rn "'box'\|'stats'\|'dir'"` 无命中；而边界本身由 `check-layers` 机械检查（import 关系）；
 - 插件不能绕过原子性：`activatePlugin` 是唯一加载路径，方式 B 也必须经过它；
 - 缺插件时错误可区分且不崩溃，结构树回到 Phase 1 字节；
 - 所有错误都是 `EditorError`，CLI 统一渲染成 `error: …`，退出码语义不变。
@@ -218,5 +227,5 @@ Phase 2 的四项要求都落到了可执行的证据上：
 
 - 四个扩展点各有真实实现，且 `box` 的接入**零内核改动**（提交 `c082226` 对 `src/` 的差异为空）；
 - 改代码与改配置两条装配路径**逐字节等价**，由真实进程测试锁住；
-- Phase 1 的全部 54 个用例一字未改仍然全绿，说明重构没有行为漂移；
+- Phase 1 的全部 54 个用例仍然全绿，且没有任何断言期望值被修改（唯一 diff 是构造参数），说明重构没有行为漂移；
 - 分层依赖与零依赖两条硬约束被纳入 `npm test`，不只是文档里的承诺。

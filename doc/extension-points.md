@@ -208,10 +208,10 @@ interface AttributeApplyContext { findShape(id: string): Shape | null; touch(sha
 
 ## 7. 边界与判据（自查用）
 
-- **内核不认识插件名**：`grep -r "box\|stats\|dir" src/core src/app src/render` 只应命中文档注释中的举例；
-  真实代码里没有任何具体类型名分支（`src/core`、`src/app`、`src/render` 对 `plugins/` 零引用）。
+- **内核不认识插件名**：`grep -rn "'box'\|'stats'\|'dir'" src/core src/app src/render src/io` 无命中
+  （只有注释里作为举例出现）；`src/core`、`src/app`、`src/render` 对 `plugins/` 零 import。
 - **插件不认识内核内部**：`plugins/**` 只 import `src/core` 的公开接口与领域抽象，不 import `src/host`、`src/cli`、`src/app`。
-  可用 `npm run check:layers` 自动验证（见 `scripts/check-layers.mjs`）。
+  可用 `npm run check:layers` 自动验证（见 `scripts/check-layers.mjs`；它检查 import 关系，不检查内联的字符串常量）。
 - **接入插件零内核改动**：`git show --stat <box 提交> -- src` 输出为空，已作为过程节点提交留证。
 - **缺插件时行为退化但不崩**：命令名与类型名的缺失被区分成两条错误；结构树回到 Phase 1 字节；
   Phase 1 的 54 个用例在框架重构后**一个字符都没改就全绿**。
