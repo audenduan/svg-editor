@@ -21,4 +21,10 @@ export interface ShapeContainer {
   removeChild(shape: Shape): number;
 
   indexOfChild(shape: Shape): number;
+
+  /**
+   * 该容器是否保护自己的必要子部件（复合图形的不变量）。
+   * 返回 `true` 时，内核拒绝把子部件删掉或挪走；普通 `<g>` / 根画布不实现或返回 `false`。
+   */
+  protectsChildren?(): boolean;
 }

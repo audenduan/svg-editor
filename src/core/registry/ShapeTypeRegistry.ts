@@ -6,30 +6,51 @@ import type { ParameterValues, ShapeParameterSpec, ShapeProvider } from './Shape
 /**
  * 图形类型注册表：`create` 的**按名分派点**（架构方案里标注的两处之一）。
  *
- * 它同时维护"类型名 → Provider"与"SVG 标签名 → Provider"两张表：
- * 命令行走类型名，`read` 走标签名，二者指向同一个 Provider，避免两套构造逻辑。
+ * 它同时维护"类型名 → Provider"与"SVG 标签名 → Provider 列表"两张表：
+ * 命令行走类型名，`read` 走标签名。同一个标签可以被多个 Provider 共享，
+ * 前提是除一个"默认 Provider"外，其余都声明 `matchesElement` 作为**标签变体**
+ * （例如 `box` 与普通 `<g>` 共用 `g`，靠 `data-kind="box"` 区分）。
  */
 export class ShapeTypeRegistry {
   private readonly providersByType = new Map<string, ShapeProvider>();
-  private readonly providersByTag = new Map<string, ShapeProvider>();
+  private readonly providersByTag = new Map<string, ShapeProvider[]>();
 
   public register(provider: ShapeProvider): void {
     if (this.providersByType.has(provider.typeName)) {
       throw new Error(`duplicate shape provider: ${provider.typeName}`);
     }
-    if (this.providersByTag.has(provider.elementTag)) {
+    const sameTag = this.providersByTag.get(provider.elementTag) ?? [];
+    if (provider.matchesElement === undefined && sameTag.length > 0) {
       throw new Error(`duplicate element tag: ${provider.elementTag}`);
     }
     this.providersByType.set(provider.typeName, provider);
-    this.providersByTag.set(provider.elementTag, provider);
+    this.providersByTag.set(provider.elementTag, [...sameTag, provider]);
   }
 
   public findProvider(typeName: string): ShapeProvider | null {
     return this.providersByType.get(typeName) ?? null;
   }
 
+  /** 该标签的**默认** Provider（不声明 `matchesElement` 的那个）。 */
   public findByTag(elementTag: string): ShapeProvider | null {
-    return this.providersByTag.get(elementTag) ?? null;
+    return this.listByTag(elementTag).find((provider) => provider.matchesElement === undefined) ?? null;
+  }
+
+  /**
+   * 读回时按标签 + 属性解析 Provider：先按注册顺序试所有**变体**，
+   * 都不匹配才回落到默认 Provider；没有可用的返回 `null`。
+   */
+  public resolveProvider(
+    elementTag: string,
+    attributes: ReadonlyMap<string, string>,
+  ): ShapeProvider | null {
+    const providers = this.listByTag(elementTag);
+    for (const provider of providers) {
+      if (provider.matchesElement !== undefined && provider.matchesElement(attributes)) {
+        return provider;
+      }
+    }
+    return providers.find((provider) => provider.matchesElement === undefined) ?? null;
   }
 
   public listProviders(): readonly ShapeProvider[] {
@@ -43,6 +64,10 @@ export class ShapeTypeRegistry {
       throw new EditorError(`unknown shape type: ${typeName} (is the plugin loaded?)`);
     }
     return provider.create(id, bindParameters(provider, tokens));
+  }
+
+  private listByTag(elementTag: string): readonly ShapeProvider[] {
+    return this.providersByTag.get(elementTag) ?? [];
   }
 }
 

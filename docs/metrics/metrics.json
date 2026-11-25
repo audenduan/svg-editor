@@ -26,8 +26,8 @@
     },
     "kernel": {
       "files": 52,
-      "lines": 3079,
-      "decisions": 261
+      "lines": 3157,
+      "decisions": 275
     },
     "assembly": {
       "files": 9,

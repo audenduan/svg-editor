@@ -85,7 +85,8 @@ export class SvgReader {
       context.warnings.push(`skipped <${tag}>: referenced shapes are not resolved in this phase`);
       return;
     }
-    const provider = this.registry.findByTag(tag);
+    const attributes = new Map(element.attributes);
+    const provider = this.registry.resolveProvider(tag, attributes);
     if (provider === null) {
       context.warnings.push(`unsupported element <${tag}> skipped`);
       return;
@@ -93,13 +94,18 @@ export class SvgReader {
     const id = this.resolveId(element, tag, context);
     const shape = provider.restore({
       id,
-      attributes: new Map(element.attributes),
+      attributes,
       textContent: element.text.trim(),
     });
     container.appendChild(shape);
     const childContainer = shape.asContainer();
     if (childContainer !== null) {
       this.readChildren(element, childContainer, context);
+    }
+    // 复合图形（如 box）读入子元素后自校验：失败则抛错，整个 read 被拒绝，原文档保持。
+    const warnings = provider.afterRestore?.(shape);
+    if (warnings !== undefined && warnings !== null) {
+      context.warnings.push(...warnings);
     }
     // 非容器元素的子元素（如 <text> 里的 <tspan>）本阶段忽略，见文档 round-trip 限制。
   }

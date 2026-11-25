@@ -8,7 +8,7 @@
 
 | 类别 | 基线行数 | 当前行数 | 增量 |
 |---|---|---|---|
-| 内核 | 2593 | 3079 | +486 |
+| 内核 | 2593 | 3157 | +564 |
 | 装配处 | 431 | 480 | +49 |
 | 插件 | 0 | 324 | +324 |
 | VSCode 扩展 | 0 | 593 | +593 |
@@ -28,7 +28,7 @@
 
 | 类别 | 基线 | 当前 | 增量 |
 |---|---|---|---|
-| 内核 | 228 | 261 | +33 |
+| 内核 | 228 | 275 | +47 |
 | 装配处 | 31 | 35 | +4 |
 | 插件 | 0 | 13 | +13 |
 | VSCode 扩展 | 0 | 61 | +61 |
@@ -47,7 +47,7 @@
 | `src/host/assemble.ts` | 装配处 | 78 | 3 |
 | `src/host/builtinPlugin.ts` | 装配处 | 169 | 12 |
 | `src/main.ts` | 装配处 | 17 | 0 |
-| `src/app/EditorSession.ts` | 内核 | 317 | 37 |
+| `src/app/EditorSession.ts` | 内核 | 335 | 42 |
 | `src/core/command/AddToContainerCommand.ts` | 内核 | 34 | 1 |
 | `src/core/command/Command.ts` | 内核 | 15 | 0 |
 | `src/core/command/CommandHistory.ts` | 内核 | 71 | 4 |
@@ -62,14 +62,14 @@
 | `src/core/command/UngroupShapeCommand.ts` | 内核 | 50 | 4 |
 | `src/core/errors/EditorError.ts` | 内核 | 14 | 0 |
 | `src/core/model/Circle.ts` | 内核 | 16 | 0 |
-| `src/core/model/ContainerShape.ts` | 内核 | 101 | 7 |
+| `src/core/model/ContainerShape.ts` | 内核 | 109 | 7 |
 | `src/core/model/Ellipse.ts` | 内核 | 18 | 0 |
 | `src/core/model/Group.ts` | 内核 | 14 | 0 |
 | `src/core/model/Line.ts` | 内核 | 25 | 0 |
 | `src/core/model/numbers.ts` | 内核 | 38 | 3 |
 | `src/core/model/Rect.ts` | 内核 | 32 | 0 |
 | `src/core/model/Shape.ts` | 内核 | 326 | 28 |
-| `src/core/model/ShapeContainer.ts` | 内核 | 25 | 0 |
+| `src/core/model/ShapeContainer.ts` | 内核 | 31 | 0 |
 | `src/core/model/ShapeState.ts` | 内核 | 15 | 0 |
 | `src/core/model/SvgDocument.ts` | 内核 | 146 | 6 |
 | `src/core/model/TextShape.ts` | 内核 | 72 | 3 |
@@ -77,7 +77,7 @@
 | `src/core/plugin/AttributeHandlerRegistry.ts` | 内核 | 38 | 3 |
 | `src/core/plugin/CommandExtension.ts` | 内核 | 43 | 0 |
 | `src/core/plugin/CommandRegistry.ts` | 内核 | 32 | 2 |
-| `src/core/plugin/ExtensionRegistry.ts` | 内核 | 174 | 19 |
+| `src/core/plugin/ExtensionRegistry.ts` | 内核 | 176 | 19 |
 | `src/core/plugin/PluginContext.ts` | 内核 | 34 | 0 |
 | `src/core/plugin/TreeDecorator.ts` | 内核 | 33 | 0 |
 | `src/core/plugin/TreeDecoratorRegistry.ts` | 内核 | 47 | 4 |
@@ -88,12 +88,12 @@
 | `src/core/registry/GroupProvider.ts` | 内核 | 16 | 0 |
 | `src/core/registry/LineProvider.ts` | 内核 | 22 | 0 |
 | `src/core/registry/RectProvider.ts` | 内核 | 22 | 0 |
-| `src/core/registry/ShapeProvider.ts` | 内核 | 43 | 0 |
-| `src/core/registry/ShapeTypeRegistry.ts` | 内核 | 83 | 11 |
+| `src/core/registry/ShapeProvider.ts` | 内核 | 57 | 0 |
+| `src/core/registry/ShapeTypeRegistry.ts` | 内核 | 107 | 18 |
 | `src/core/registry/TextProvider.ts` | 内核 | 20 | 0 |
 | `src/io/FileStore.ts` | 内核 | 13 | 0 |
 | `src/io/NodeFileStore.ts` | 内核 | 23 | 2 |
-| `src/io/SvgReader.ts` | 内核 | 196 | 35 |
+| `src/io/SvgReader.ts` | 内核 | 202 | 37 |
 | `src/io/SvgWriter.ts` | 内核 | 111 | 10 |
 | `src/io/xml/XmlElement.ts` | 内核 | 9 | 0 |
 | `src/io/xml/XmlParser.ts` | 内核 | 227 | 47 |

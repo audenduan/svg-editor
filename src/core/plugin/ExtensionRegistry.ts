@@ -133,10 +133,12 @@ export class ExtensionRegistry implements PluginContext {
 
   public registerShapeProvider(provider: ShapeProvider): void {
     const pending = this.requirePending('shapes');
+    // 标签变体（声明 matchesElement）允许共享元素标签，只有"默认 Provider"占用标签。
+    const isVariant = provider.matchesElement !== undefined;
     pending.push({
       category: 'shapes',
       name: provider.typeName,
-      tag: provider.elementTag,
+      tag: isVariant ? undefined : provider.elementTag,
       apply: () => this.shapes.register(provider),
     });
   }

@@ -130,6 +130,14 @@ export class EditorSession {
     if (document.findShape(id) !== null) {
       throw new EditorError(`id already exists: ${id}`);
     }
+    // 插件复合图形会一并生成子部件 id（如 `<id>-rect`）：整棵新子树的 id 都要先查重，
+    // 冲突则整条命令失败，不留半个容器或孤儿子部件。
+    const provider = this.options.extensions.shapeRegistry.findProvider(typeName);
+    for (const derivedId of provider?.derivedIds?.(id) ?? []) {
+      if (document.findShape(derivedId) !== null) {
+        throw new EditorError(`id already exists: ${derivedId}`);
+      }
+    }
     const parent = this.resolveContainer(document, containerId);
     const shape = this.options.extensions.shapeRegistry.createShape(typeName, id, params);
     return [this.history.run(new CreateShapeCommand(shape, parent))];
@@ -137,6 +145,7 @@ export class EditorSession {
 
   public deleteShape(id: string): string[] {
     const shape = this.requireShape(id);
+    this.requireRemovable(shape);
     return [this.history.run(new DeleteShapeCommand(shape))];
   }
 
@@ -235,6 +244,7 @@ export class EditorSession {
       throw new EditorError(`not a container: ${containerId}`);
     }
     const shape = this.requireShape(shapeId);
+    this.requireRemovable(shape);
     if (shape === target) {
       throw new EditorError(`cannot move a container into itself: ${shapeId}`);
     }
@@ -297,6 +307,14 @@ export class EditorSession {
       throw new EditorError(`no such shape: ${id}`);
     }
     return shape;
+  }
+
+  /** 复合图形保护契约：其父容器声明 `protectsChildren()` 时，子部件不得删除或挪走。 */
+  private requireRemovable(shape: Shape): void {
+    const parent = shape.parent;
+    if (parent !== null && parent.protectsChildren?.() === true) {
+      throw new EditorError(`cannot remove a required sub-part: ${shape.id}`);
+    }
   }
 
   /** `create … in <containerId>`：目标必须存在且是容器，两个错误分开报。 */

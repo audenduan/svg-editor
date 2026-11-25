@@ -52,6 +52,14 @@ export abstract class ContainerShape extends Shape implements ShapeContainer {
     return this.items.indexOf(shape);
   }
 
+  /**
+   * 是否保护必要子部件：普通分组不保护（可以随意增删子图形）。
+   * 插件复合图形（`box`）覆盖为 `true`，内核据此拒绝删除/挪走其子部件。
+   */
+  public protectsChildren(): boolean {
+    return false;
+  }
+
   public override asContainer(): ContainerShape {
     return this;
   }
