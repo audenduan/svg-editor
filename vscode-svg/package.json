@@ -1,0 +1,30 @@
+{
+  "name": "svg-outline-badge",
+  "displayName": "SVG Outline & Badge",
+  "description": "Explorer badge + native SVG outline for the svg-editor project (PJ1 Phase 2, A.1/A.2).",
+  "version": "0.1.0",
+  "publisher": "svg-editor-pj1",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./dist/src/extension.js",
+  "activationEvents": [
+    "*"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "svgEditor.refreshDecorations",
+        "title": "SVG: Refresh File Decorations"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "node ../node_modules/typescript/bin/tsc -p tsconfig.json",
+    "test": "node --test \"dist/tests/*.test.js\""
+  }
+}
