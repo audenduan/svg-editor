@@ -7,6 +7,9 @@ import test from 'node:test';
 
 const repoRoot = path.resolve(__dirname, '..', '..');
 
+/** 启动横幅的首行片段：用来判断"是否真的进入了 REPL"。 */
+const BANNER_MARKER = 'svg-editor 0.1';
+
 interface CliRun {
   readonly stdout: string;
   readonly stderr: string;
@@ -84,6 +87,48 @@ test('方式 B：缺少插件模块时报 cannot load plugin 而不是崩溃', (
     const run = runCli('main.js', 'canvas\n', ['--config', manifest]);
     assert.notEqual(run.status, 0);
     assert.ok((run.stdout + run.stderr).includes('cannot load plugin ghost'), '应指出是哪个插件加载失败');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('方式 B：配置文件非法时直接退出，不带着半套插件进入 REPL', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'svgframe-badcfg-'));
+  try {
+    const manifest = path.join(dir, 'plugins.json');
+    writeFileSync(manifest, JSON.stringify({ version: 1 }), 'utf8');
+    const run = runCli('main.js', 'canvas\n', ['--config', manifest]);
+    assert.equal(run.status, 1, '运行期装配失败退出码为 1');
+    assert.ok(run.stdout.includes('error: invalid plugin config'), '应打印明确原因');
+    assert.equal(run.stdout.includes(BANNER_MARKER), false, '不得进入 REPL（横幅都不该出现）');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('方式 B：--config 缺参数时退出码为 2（用法错与运行期失败区分开）', () => {
+  const run = runCli('main.js', 'canvas\n', ['--config']);
+  assert.equal(run.status, 2);
+  assert.ok(run.stdout.includes('error: --config requires a manifest path'));
+});
+
+test('方式 B：被禁用的插件给出 warning，且横幅仍是第一行', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'svgframe-disabled-'));
+  try {
+    const manifest = path.join(dir, 'plugins.json');
+    writeFileSync(
+      manifest,
+      JSON.stringify({
+        version: 1,
+        plugins: [{ name: '@svgframe/plugin-command-stats', entry: 'builtin:command-stats', enabled: false }],
+      }),
+      'utf8',
+    );
+    const run = runCli('main.js', 'canvas\n', ['--config', manifest]);
+    assert.equal(run.status, 0);
+    const lines = run.stdout.split(/\r?\n/);
+    assert.equal(lines[0], "svg-editor 0.1 — type 'help' for commands", '横幅必须是第一行');
+    assert.ok(lines.some((line) => line.startsWith('warning: ') && line.includes('disabled by config')));
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

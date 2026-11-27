@@ -12,6 +12,11 @@ export interface ReplOptions {
   readonly promptStream: NodeJS.WritableStream;
   /** 是否为交互终端：是则显示 `svg>` 提示符，管道/重定向时不显示。 */
   readonly interactive: boolean;
+  /**
+   * 横幅之后、第一条命令之前打印的行（装配期的 `warning:` 等）。
+   * 放在这里而不是让 `main` 直接写输出，是为了保持"横幅永远是第一行"这一输出约定。
+   */
+  readonly prelude?: readonly string[];
 }
 
 /**
@@ -28,6 +33,9 @@ export class Repl {
     this.options.output.writeLine(BANNER);
     if (this.options.interactive) {
       this.options.output.writeLine('');
+    }
+    for (const line of this.options.prelude ?? []) {
+      this.options.output.writeLine(line);
     }
     const readline = createInterface({
       input: this.options.input,

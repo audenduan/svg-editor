@@ -139,6 +139,7 @@ export class EditorSession {
       }
     }
     const parent = this.resolveContainer(document, containerId);
+    this.requireAcceptsChildren(parent, containerId);
     const shape = this.options.extensions.shapeRegistry.createShape(typeName, id, params);
     return [this.history.run(new CreateShapeCommand(shape, parent))];
   }
@@ -192,6 +193,10 @@ export class EditorSession {
       throw new EditorError('usage: group <newGid> <id1> <id2>…');
     }
     const members = memberIds.map((memberId) => this.requireShape(memberId));
+    for (const member of members) {
+      // group 会把成员从原父级摘走：复合图形的必要子部件不能这样被"借走"。
+      this.requireRemovable(member);
+    }
     const seen = new Set<string>();
     for (const memberId of memberIds) {
       if (seen.has(memberId)) {
@@ -245,6 +250,7 @@ export class EditorSession {
     }
     const shape = this.requireShape(shapeId);
     this.requireRemovable(shape);
+    this.requireAcceptsChildren(container, containerId);
     if (shape === target) {
       throw new EditorError(`cannot move a container into itself: ${shapeId}`);
     }
@@ -257,6 +263,11 @@ export class EditorSession {
 
   public reorder(id: string, direction: ReorderDirection): string[] {
     const shape = this.requireShape(id);
+    // 子部件顺序是复合图形不变量的一部分（如 box 的「底板 → 标签」）：不得通过 front/back 打乱。
+    const parent = shape.parent;
+    if (parent !== null && parent.protectsChildren?.() === true) {
+      throw new EditorError(`cannot reorder the parts of a composite shape: ${shape.id}`);
+    }
     return [this.history.run(new ReorderShapeCommand(shape, direction))];
   }
 
@@ -314,6 +325,16 @@ export class EditorSession {
     const parent = shape.parent;
     if (parent !== null && parent.protectsChildren?.() === true) {
       throw new EditorError(`cannot remove a required sub-part: ${shape.id}`);
+    }
+  }
+
+  /**
+   * 复合图形的另一半契约：目标容器保护子部件时，**也不许**往里加新子部件。
+   * 否则 `create … in <box>` / `addto <box> <x>` 会让"恰好两个子部件"的图形变成三个。
+   */
+  private requireAcceptsChildren(container: ShapeContainer, containerId: string | null): void {
+    if (container.protectsChildren?.() === true) {
+      throw new EditorError(`cannot add a child to a composite shape: ${containerId ?? '<svg>'}`);
     }
   }
 

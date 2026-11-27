@@ -42,6 +42,9 @@ interface ShapeProvider {
 - `create` 命令 → `createShape(typeName, id, tokens)`：按 `typeName` 取 Provider，用 `parameters` 校验数量与数值；
 - `read` 命令 → `resolveProvider(elementTag, attributes)`：先按注册顺序试各**变体**的 `matchesElement`，都不中再回落默认 Provider；
 - 完整性保护 → `derivedIds()` 在创建前对整棵新子树做 id 查重；`afterRestore()` 在读入后校验必要子部件是否齐全。
+- 内部结构保护 → 容器可选实现 `protectsChildren(): boolean`。一旦为真，内核会拒绝**四种**会破坏内部结构的操作：
+  删除子部件（`delete`）、移走子部件（`addto` / `group`）、往容器里加子部件（`create … in` / `addto`）、
+  调整子部件顺序（`front` / `back`）。内核只认这个布尔约定，不知道也不关心它是哪种图形。
 
 **注册**：`context.registerShapeProvider(provider)`。**默认 Provider**（不声明 `matchesElement`）独占元素标签；
 变体可以与默认 Provider 共享标签，这是 `box` 复用 `<g>` 的机制。

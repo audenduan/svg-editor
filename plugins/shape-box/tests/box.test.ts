@@ -104,6 +104,72 @@ test('box：必要子部件不得删除或挪走', () => {
   ]);
 });
 
+test('box：不得往里塞新子部件（create … in / addto）', () => {
+  const harness = createHarness([boxPlugin]);
+  runLines(harness.app, [
+    'init 400 200',
+    'create box n1 10 20 100 40 "x"',
+    'create rect loose 300 10 5 5',
+    'create rect extra 0 0 5 5 in n1',
+    'create box inner 0 0 10 10 "y" in n1',
+    'addto n1 loose',
+    'tree',
+  ]);
+  const lines = harness.out.lines;
+  assert.deepEqual(lines.slice(3, 6), [
+    'error: cannot add a child to a composite shape: n1',
+    'error: cannot add a child to a composite shape: n1',
+    'error: cannot add a child to a composite shape: n1',
+  ]);
+  // 结构未被破坏：box 仍然恰好两个子部件
+  const boxLine = lines.findIndex((line) => line.endsWith('box#n1 (box)'));
+  const children = lines.slice(boxLine + 1).filter((line) => /^[│ ]+[├└]──/.test(line));
+  assert.equal(children.length, 2, 'box 必须仍然只有两个子部件');
+});
+
+test('box：子部件顺序不得被打乱（front/back），否则 round-trip 会失败', () => {
+  const harness = createHarness([boxPlugin]);
+  runLines(harness.app, [
+    'init 400 200',
+    'create box n1 10 20 100 40 "x"',
+    'front n1-rect',
+    'back n1-label',
+    'save a.svg',
+    'read a.svg',
+  ]);
+  const lines = harness.out.lines;
+  assert.ok(lines.includes('error: cannot reorder the parts of a composite shape: n1-rect'));
+  assert.ok(lines.includes('error: cannot reorder the parts of a composite shape: n1-label'));
+  assert.ok(lines.some((line) => line.startsWith('read a.svg')), '保存后必须还能读回来');
+  assert.equal(lines.some((line) => line.startsWith('error: invalid box')), false);
+});
+
+test('box：不得被 group 借走必要子部件（group 会摘走成员）', () => {
+  const harness = createHarness([boxPlugin]);
+  runLines(harness.app, [
+    'init 400 200',
+    'create box n1 10 20 100 40 "x"',
+    'create rect loose 300 10 5 5',
+    'group gnew n1-rect',
+    'group gnew2 loose',
+  ]);
+  assert.ok(harness.out.lines.includes('error: cannot remove a required sub-part: n1-rect'));
+  assert.ok(harness.out.lines.includes('g#gnew2 created with 1 children'), '正常成员仍可分组');
+});
+
+test('box：未装插件时读入 box 文件退化为普通分组，重新保存逐字节不变', () => {
+  const withPlugin = createHarness([boxPlugin]);
+  runLines(withPlugin.app, ['init 400 200', 'create box n1 10 20 100 40 "start"', 'save a.svg']);
+  const original = withPlugin.files.read('a.svg');
+
+  const bare = createHarness();
+  bare.files.write('a.svg', original);
+  runLines(bare.app, ['read a.svg', 'save b.svg', 'tree']);
+  // 退化为 <g>，但 data-kind 作为未知属性被保留下来
+  assert.ok(bare.out.lines.some((line) => line.includes('g#n1') && line.includes('data-kind=box')));
+  assert.equal(bare.files.read('b.svg'), original, '退化后保存必须与插件在场时的输出逐字节相同');
+});
+
 test('box：派生 id 冲突时整条命令失败，不留残余', () => {
   const harness = createHarness([boxPlugin]);
   runLines(harness.app, ['init 400 200', 'create text n1-label 0 0 "x"', 'create box n1 10 20 30 30 "y"', 'tree']);
