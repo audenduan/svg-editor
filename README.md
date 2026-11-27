@@ -32,7 +32,7 @@ svg (800x600)
 npm install
 npm run cli          # 交互式 REPL（svg> 提示符），仅内置插件
 npm run cli < script # 脚本回放：以 # 开头的行是注释，逐行执行
-npm test             # 构建 → 依赖纪律检查 → 分层检查 → 125 个测试用例
+npm test             # 构建 → 依赖纪律检查 → 分层检查 → 149 个测试用例
 ```
 
 ### Phase 2：插件化的两种装配方式
@@ -41,13 +41,20 @@ npm test             # 构建 → 依赖纪律检查 → 分层检查 → 125 �
 # 方式 A（改代码）：在 src/main-code.ts 里 import 插件，然后
 npm run build && npm run start:code
 
-# 方式 B（改配置）：把插件写进 config/plugins.json，然后
-npm run build && npm run start:config     # = node dist/src/main.js --config config/plugins.json
+# 方式 B（改配置）：把插件写进仓库根的 plugins.config.json，然后
+npm run build && npm run start:config     # = node dist/src/main.js --config plugins.config.json
 ```
 
-两种方式产出**逐字节相同**的输出（由 `tests/assembly.test.ts` 用真实进程比对）。
-配置文件格式与 `entry` 解析规则见 [`doc/extension-points.md`](doc/extension-points.md)；
-运行 `npm run start:config < examples/plugin-demo.txt` 可以看到 `box`、`stats`、`dir` 三个插件命令。
+两种方式产出**逐字节相同**的输出（由 `tests/assembly.test.ts` 用真实进程比对，
+也可直接跑 `node scripts/compare-assembly.mjs`）。
+配置文件格式（`module` / `options` / `contributes`）与解析规则见
+[`doc/extension-points.md`](doc/extension-points.md) §6；
+运行 `npm run start:config < examples/plugin-demo.txt` 可以看到 `box`、`stats`、`dir` 与
+`modified-star` 标签的效果。
+
+**加载期失败的约定**（Phase 2 规范 §6）：模块找不到、没有默认导出、清单声明与实际注册不一致、
+`activate` 抛错、配置非法，都打印一行 `error: …` 后**继续启动**，已成功的插件与内置能力照常可用；
+只有 `--config` 缺参数这类用法错以退出码 2 结束。
 
 ```bash
 npm test:vscode      # 编译并测试 VSCode 扩展（vscode-svg/）

@@ -1,0 +1,14 @@
+# Phase 1 核心会话：画布、图形、层级、撤销、结构树
+init 400 300
+create rect a 10 20 100 50
+create circle c 200 60 30
+create g grp
+addto grp a
+create text t 20 100 "hello world" in grp
+move grp 5 5
+tree
+show a
+undo
+tree
+scale c 2
+tree

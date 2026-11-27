@@ -1,0 +1,8 @@
+# 命令插件会话：stats（统计）与 dir（目录列表）
+init 400 300
+create rect a 0 0 10 10
+create circle c 20 20 5
+create g grp
+addto grp a
+stats
+dir examples

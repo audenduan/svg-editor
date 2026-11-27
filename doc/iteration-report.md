@@ -160,48 +160,70 @@ Phase 2 要求把 Phase 1 的单体 CLI 改造成**插件化架构**，四个扩
 
 ### 5.1 测试
 
-99 个用例，分五层：
+148 个用例（`npm test` 一次跑完），分六层：
 
 | 层级 | 文件 | 覆盖 |
 |---|---|---|
 | Phase 1 回归 | `tests/*.test.ts`（原有） | 54 个用例全部通过，断言期望值一字未改（唯一 diff 是 `SetAttributeCommand` 的构造参数） |
-| 框架 | `tests/extensions.test.ts` | 四个扩展点的注册/冲突回滚/处理器优先级/失败回滚 |
-| 装饰器契约 | `tests/decorators.test.ts` | `modified-star` 形态示例：`onSaved`/`onDocumentReplaced` 复位、空串不留空格 |
+| 框架 | `tests/extensions.test.ts` | 四个扩展点的注册 / 冲突回滚 / 处理器优先级 / 失败回滚 |
+| 激活与清单 | `tests/pluginActivation.test.ts` | `activateChecked`：清单逐类比对、`activate` 抛错回滚、重复注册保留先注册者、`options` 原样透传、声明为空也算不一致 |
+| 装饰器契约 | `tests/decorators.test.ts` | 无装饰器时行尾不留空格、`onSaved` / `onDocumentReplaced` 复位、多装饰器按注册顺序拼接 |
 | 组合 | `tests/composition.test.ts` | 跨插件协作、缺插件退化、顺序无关、基线字节 |
-| 装配 | `tests/assembly.test.ts`、`tests/configLoader.test.ts` | **真实 CLI 进程**逐字节比较两种装配、非法配置、缺模块 |
+| 装配 | `tests/assembly.test.ts`、`tests/configLoader.test.ts` | **真实 CLI 进程**逐字节比较两种装配；六个规范文案；加载期失败继续启动；相对路径解析；`options` 到达插件 |
+| 插件独立测试 | `plugins/*/tests/*.test.ts` | `box`：创建 / 读写往返 / 四类结构保护 / 属性处理器 / undo；`stats`：计数口径；`dir`：适配器（测试替身 + 真实 FS）；`tree-star`：`*` 状态机四分支、祖先传播、与 `(box)` 并存 |
 | help 排版 | `tests/help.test.ts` | 用法列宽自适应、说明列对齐、插件命令出现在 help |
 
-（含装饰器契约用例与 debug 回归用例，总数为 123。）
+Phase 2 新增的测试文件都遵循同一条原则：**断言规范原文里的文案与行为**（而非"当前实现的输出"），
+所以每次实现偏离规范，测试都会先一步变红。
 
 ### 5.1.1 全面 debug 阶段发现并修掉的 6 个缺陷
 
 代码写完、测试全绿，不等于没有 bug。这一轮专门**换角度攻击**（而不是重跑已有断言），
-方法是：写探针脚本把命令组合灌进真实装配，观察不变量是否还能被破坏。结果找到 5 个：
+方法是：写探针脚本把命令组合灌进真实装配，观察不变量是否还能被破坏。
 
 | # | 缺陷 | 表现 | 根因 | 修复 |
 |---|---|---|---|---|
 | 1 | `create … in <box>` / `addto <box> <x>` 能往 box 里塞第三个子部件 | 之后 `save` 正常、`read` 报 `invalid box`——**用户自己的文件变得读不回来** | 只保护了"删"与"移走"，没保护"加入" | 内核加 `requireAcceptsChildren`：容器 `protectsChildren()` 为真时拒绝加子元素 |
 | 2 | `front` / `back` 能打乱 box 的子部件顺序 | 同上，round-trip 直接失败 | 顺序被当作可自由调整的显示属性，但它是 box 不变量的一部分 | `reorder` 前检查父容器保护契约 |
 | 3 | `group <newId> <box 的子部件>` 能把必要子部件"借走" | box 少一个子部件，结构损坏 | `group` 内部移出成员，绕过了删除保护 | `group` 对每个成员执行 `requireRemovable` |
-| 4 | `--config` 加载失败后仍进入 REPL | 用户看到 `unknown command: stats` 而非真正的配置错误 | 入口把"装配失败"当成"可继续" | 装配失败即打印 `error:` 退出（运行期失败 1，用法错 2）；横幅永远第一行，`warning:` 由 `Repl` 的 `prelude` 在横幅后输出 |
-| 5 | `help` 用法列固定 46 列，最长用法溢出 | `create <type> <id> [params…] [in <containerId>]create a shape` 说明贴死在用法上 | 列宽写死；Phase 1 遗留 | 列宽改为"最长用法 + 2"，最小 46 |
-| 6 | `set <box> fill <浅色>` 把标签文字也染成浅色 | 标签与底色同色，**文字消失** | 处理器把同一个值刷到两个子部件，忽略了 `<text>` 的 `fill` 是"字的颜色" | 底板收底色，标签收对比色（亮度阈值 + 只认十六进制） |
+| 4 | `help` 用法列固定 46 列，最长用法溢出 | `create <type> <id> [params…] [in <containerId>]create a shape` 说明贴死在用法上 | 列宽写死；Phase 1 遗留 | 列宽改为"最长用法 + 2"，最小 46 |
+| 5 | `set <box> fill <浅色>` 把标签文字也染成浅色 | 标签与底色同色，**文字消失** | 处理器把同一个值刷到两个子部件，忽略了 `<text>` 的 `fill` 是"字的颜色" | 先改成"底板收底色、标签收对比色"；**规范对齐轮又改回只改底板**（见 §5.1.2 第 6 条） |
+| 6 | `--config` 加载失败后仍进入 REPL | 用户看到 `unknown command: stats` 而非真正的配置错误 | 入口把"装配失败"当成"可继续" | 先改成"失败即退出"；**规范对齐轮又改回继续启动**（见 §5.1.2 第 3 条） |
 
 前 3 个都是**同一个思维盲区**：实现 `protectsChildren()` 时只想到"别让子部件离开"，
 没想到"别让新东西进来"和"别重排"。修法把契约补全为四类操作（删/移走/加入/重排），
 且仍然只依赖容器自报的布尔值——内核不认识 `box`。
 
-第 4 个的教训是**失败路径也要当正常路径设计**：装配失败时继续跑，会把"配置写错"
-伪装成"命令不存在"，排查成本从一眼变成一小时。
-
-第 5 个是 `final` 上就存在的排版缺陷（Phase 1 遗留）。修它使**当前版本与 `final` 的输出
+第 4 个是 `final` 上就存在的排版缺陷（Phase 1 遗留）。修它使**当前版本与 `final` 的输出
 在这一行不同**——这是唯一一处有意偏离，见 §5.3.1 的逐字节复核说明。
 
-第 6 个（`fill` 把标签染色）属于**语义**层面的 bug，测试全绿也发现不了：两个子部件都拿到了
-用户给的值，`assert` 完全成立，但屏幕上的字没了。它只能靠"看到输出后觉得不对"发现——
-所以 debug 阶段刻意把每个命令的真实输出**打印出来读一遍**，而不只看断言是否通过。
-这条也回答了"插件该拥有什么"：不是"批量写同一个值"（白名单也能做），而是
-"把用户级语义翻译成子部件级语义"（`fill` 在底板与文字上是两种东西）。
+第 5、6 两个缺陷的**修复方向最终被规范否决**，这是本轮最有价值的教训之一：
+debug 阶段的两个"更聪明的做法"（自动配对比色、失败即退出）都超出了规范给定的行为契约。
+把"我觉得更好"当成"应该如此"，是 AI 协作里最容易发生的越界——判据只能是**规范原文**。
+
+### 5.1.2 规范对齐轮发现并修掉的 8 处违规
+
+功能跑通之后再对着 `phase_cli_2` 原文逐条核对，发现实现层面有 8 处与规范/判据不一致。
+它们都不是"跑不起来"，而是"跑起来但不符合契约"——**测试全绿也照样违规**。
+
+| # | 违规 | 规范要求 | 修正 |
+|---|---|---|---|
+| 1 | 会在 8 处打不开：加载器内建了 `builtin:shape-box → 路径` 的**名称映射表** | 加载器不得硬编码具体插件的分支或映射表（判据直接查这一点） | 删除整张表；claimed 的 `module` 说明符原样交给宿主解析（`./` 相对配置目录、绝对路径原样、其余按包名） |
+| 2 | 清单只有 `name`/`entry`/`enabled`，没有 `contributes` | 声明四类贡献，与实际注册**逐类比较**，不一致即失败 | 新增 `PluginActivation.activateChecked`：暂存 → `compareContributions` → 提交/回滚，`stagedNames()` 提供"暂存态"快照 |
+| 3 | 加载失败即退出（退出码 1） | 四类失败必须打印 `error:` 并**继续启动，主程序不得退出** | `main.ts` 重写：错误行进 prelude，REPL 照常启动；只有用法错（`--config` 缺参数）才退出 2 |
+| 4 | 错误文案是自造的（`cannot read plugin config`、`cannot load plugin …`） | 六个固定文案逐字一致 | 全量替换为 `plugin not found: <module>`、`plugin has no default export: <module>`、`plugin manifest mismatch: <name> (declared: …; registered: …)`、`plugin failed to activate: <name> (<reason>)`、`duplicate registration: <category>/<name>`、`invalid plugin config` |
+| 5 | 配置在 `config/plugins.json`，键名是 `entry`/`config`，且没有 `contributes` | 清单结构为 `plugins[].{name, module, options, enabled, contributes}` | 新建仓库根 `plugins.config.json`，删除旧文件；`entry`/`config` 保留为兼容别名 |
+| 6 | `set fill` 顺手改了标签字色 | "实际修改"写死为 `n1-rect` 的 `fill` | 收敛回只改底板；对比色构想以 "known limitation" 记入 ADR-4，而不是留在代码里 |
+| 7 | `modified-star` 只是测试里的匿名对象，不是插件 | 三处：`contributes.decorators: ["modified-star"]`、`suffix` 返回 `*`、状态封装在实例里、**独立插件包 + 独立测试** | 新建 `plugins/tree-star`（含 `contributes`、独立状态机测试）；内核只加一个通用钩子 `onEdited` 广播"哪些 id 被改过" |
+| 8 | VSCode 选择器 `**/*.svg` 匹配不到工作区**根目录**的 `a.svg` | 打开 `.svg` 必须能出大纲与徽标 | 选择器补 `{ pattern: '*.svg' }`，并在 `analysis.md` 记录"自定义编辑器接管 `.svg` 时无大纲"这条运行期约束 |
+
+第 1、2 条是这次审计的核心收获：**判据查的是"代码里有没有那张表"**。
+只要表还在，无论它被多少测试覆盖，这一项就是 0 分。同理，`contributes` 比对不是"锦上添花的校验"，
+而是规范要求的装配协议——插件声明什么，就必须精确注册什么。
+
+第 7 条牵出一个设计判断：`*` 的 dirty 语义（"内容变了" vs "发生过编辑"）规范留了选择空间，
+但要求写进 ADR。选择了后者（`undo` 不撤销 `*`），因为它不需要在渲染路径上做内容快照，
+且判据里的"编辑 → 保存 → 再编辑 → `undo`"四个分支都能被独立测试断言。见 ADR-10。
 
 ### 5.2 自动化闸门（`npm test` 一次跑完）
 
@@ -209,7 +231,7 @@ Phase 2 要求把 Phase 1 的单体 CLI 改造成**插件化架构**，四个扩
 tsc（strict, noUnusedLocals, noUnusedParameters, noFallthroughCasesInSwitch）
   → check-dependencies.mjs   零运行时依赖 + 内核不 import node 内置模块
   → check-layers.mjs         分层依赖 0 违规（内核不依赖上层/插件，插件不碰装配层）
-  → node --test              125 个用例
+  → node --test              148 个用例
 ```
 
 `check-layers.mjs` 是这次新增的：把"插件化"从口头约束变成 CI 约束。
@@ -221,20 +243,33 @@ tsc（strict, noUnusedLocals, noUnusedParameters, noFallthroughCasesInSwitch）
 grep -rn "'box'\|'stats'\|'dir'" src/core src/app src/render src/io
 ```
 
+**双装配一致性的独立判据**（不依赖测试框架，直接对真实进程）：
+
+```bash
+node scripts/compare-assembly.mjs
+# ok   cli-1.txt：27 行输出逐字节相同（退出码 0）
+# ok   cli-2.txt：8 行输出逐字节相同（退出码 0）
+# ok   cli-3.txt：25 行输出逐字节相同（退出码 0）
+```
+
+会话输入放在 `doc/transcript/cli-{1,2,3}.txt`，只含命令与 `#` 注释（不含 `svg>` 提示符与示例输出），
+因此同一份输入可以喂给任意装配方式。
+
 ### 5.3 指标（由 `scripts/metrics.mjs` 从 git 历史生成，不接受手填）
 
 | 类别 | 基线行数 | 当前行数 | 判断点增量 |
 |---|---|---|---|
-| 内核（core/app/io/render） | 2593 | 3464 | +105 |
-| 装配处（cli/host/入口） | 431 | 639 | +17 |
-| 插件（plugins/） | 0 | 899 | +40 |
-| VSCode 扩展 | 0 | 593 | +61 |
-| 测试与其他 | 955 | 1708 | +18 |
+| 内核（core/app/io/render） | 2593 | 3711 | 见 `docs/metrics/metrics.md` |
+| 装配处（cli/host/入口） | 431 | 709 | |
+| 插件（plugins/） | 0 | 1049 | |
+| VSCode 扩展 | 0 | 604 | |
+| 其他（测试/脚本/文档） | 955 | 2065 | |
 
-（数字来自 `docs/metrics/metrics.md`，由 `node scripts/metrics.mjs --base final --head WORKTREE` 生成，不接受手填。）
+（数字来自 `docs/metrics/metrics.md`，由 `node scripts/metrics.mjs --base final --head WORKTREE` 生成。）
 
 指标不用于评分，用于回答"复杂度去了哪里"：**新增复杂度主要落在插件与测试**，
-内核增量集中在四个接口与注册表；装配处只涨了 208 行（清单加载桥接 + 第二个入口 + 入口的失败策略）。
+内核增量集中在四个接口、两个注册表与一个激活校验函数；装配处只涨了 278 行
+（清单加载桥接 + 第二个入口 + 入口的失败策略 + 模块加载适配）。
 
 ### 5.3.1 与 `final` 的逐字节复核（verify 阶段的做法与结论）
 
@@ -257,31 +292,33 @@ grep -rn "'box'\|'stats'\|'dir'" src/core src/app src/render src/io
 
 ### 5.4 判据自检
 
-- 内核里没有任何具体类型名分支：`src/core`、`src/app`、`src/render`、`src/io` 里
-  `grep -rn "'box'\|'stats'\|'dir'"` 无命中；而边界本身由 `check-layers` 机械检查（import 关系）；
-- 插件不能绕过原子性：`activatePlugin` 是唯一加载路径，方式 B 也必须经过它；
-- 缺插件时错误可区分且不崩溃，结构树回到 Phase 1 字节；
-- 装配失败不进入 REPL：`--config` 读不到/写错/插件加载失败一律 `error:` + 退出码 1（用法错为 2）；
-- 复合图形的内部结构四类操作全部被拒（加/删/移走/重排），且 `save` 后的文件一定能 `read` 回来；
-- 所有错误都是 `EditorError`，CLI 统一渲染成 `error: …`，退出码语义不变。
+- **内核里没有任何具体类型名分支或映射表**：`src/core`、`src/app`、`src/render`、`src/io` 里
+  `grep -rn "'box'\|'stats'\|'dir'"` 无命中（注释除外），加载器里也没有"插件名 → 路径"的表；
+- **插件不能绕过原子性与清单校验**：`activateChecked` 是唯一加载路径（两处入口都走它），
+  方式 B 的插件也必须先通过 `contributes` 比对才能提交；
+- **加载期失败不阻断启动**：四类失败 + 配置非法都只打印 `error:` 行，REPL 与内置能力照常可用；
+- **缺插件时错误可区分**：`unknown command: …` 与 `unknown shape type: … (is the plugin loaded?)` 分开报；
+- **复合图形内部结构四类操作全部被拒**（加 / 删 / 移走 / 重排），`save` 后的文件一定能 `read` 回来；
+- **Phase 1 行为不变**：`tests/transcript.test.ts` 等 Phase 1 用例的断言**一个字符都没改**即全绿；
+  不加载可选插件时 `tree` 与 Phase 1 逐字节相同（`tests/decorators.test.ts` 用根行与行尾空格锁住）；
+- **两种装配方式逐字节等价**：`tests/assembly.test.ts`（真实进程）+ `scripts/compare-assembly.mjs`（三个会话）。
 
 ---
 
 ## 6. 已知边界
 
-1. **`entry` 必须指向可 `require` 的 JS**：源码是 TypeScript，所以内建的三个插件用 `builtin:` 前缀映射到
-   `dist/` 产物；外部插件同理需要先编译。这条规则写在清单文档与错误信息里，不在装配时做隐式编译。
+1. **`module` 必须指向可 `require` 的 JS**：源码是 TypeScript，所以仓库内的插件都配置到
+   `./dist/plugins/<包>/src/index.js`；外部插件同理需要先编译。这条规则写在清单文档与错误信息里，
+   装配时不做隐式编译。
 2. **`dir` 列出的是当前工作目录**：不跟随符号链接（按 `[FILE]` 显示），不做递归，不支持参数（`usage: dir`）。
-3. **`modified-star` 类装饰器依赖 `onSaved` 契约**：内核在保存、`init`、`read` 后通知，装饰器自行维护状态；
-   本次交付的 `(box)` 标签是无状态的，`modified-star` 只在 `tests/decorators.test.ts` 中作为契约示例验证，
-   没有作为独立插件交付（它需要"哪个图形被改过"的信息，而内核目前不广播编辑事件）。
-4. **VSCode 扩展的截图部分人工完成**：大纲截图已归档为
-   [`vscode-svg/screenshots/02-outline.png`](../vscode-svg/screenshots/02-outline.png)
-   （原生 Outline 显示 `svg > g#flowchart > g#node1 > rect#start / text#start-label`）；
-   `vscode-svg/README.md` §5.0 记录了三种启动方式与两条运行期约束
-   （选择器必须覆盖工作区根目录、`.svg` 被自定义编辑器接管时无大纲）。
-   Explorer 徽标单图仍待补，自动化部分（解析器 5 个用例）已全绿。
-5. **Phase 1 的实验报告不包含 Phase 2**：Phase 2 的说明集中在本报告的 `doc/` 三份文档里。
+3. **`modified-star` 的 dirty 语义是"发生过编辑命令"**：`undo` 回到保存点后 `*` 仍然保留，
+   只有 `save` / `init` / `read` 才会清除。另一种"内容与上次保存不一致"的语义见 ADR-10 的被否方案。
+4. **VSCode 扩展有两条运行期约束**：工作区必须能匹配到 `.svg`（选择器已覆盖 `**/*.svg` 与根级 `*.svg`）；
+   `.svg` 若被图片预览自定义编辑器接管，则原生大纲不产出内容（需"重新打开方式 → 文本编辑器"）。
+   截图部分人工完成：大纲截图已归档为
+   [`vscode-svg/screenshots/02-outline.png`](../vscode-svg/screenshots/02-outline.png)，
+   Explorer 徽标单图见 `vscode-svg/screenshots/01-badge.png`。
+5. **Phase 1 的实验报告不包含 Phase 2**：Phase 2 的说明集中在本报告与 `doc/README.md` §5。
 
 ---
 
@@ -289,7 +326,12 @@ grep -rn "'box'\|'stats'\|'dir'" src/core src/app src/render src/io
 
 Phase 2 的四项要求都落到了可执行的证据上：
 
-- 四个扩展点各有真实实现，且 `box` 的接入**零内核改动**（提交 `c082226` 对 `src/` 的差异为空）；
-- 改代码与改配置两条装配路径**逐字节等价**，由真实进程测试锁住；
-- Phase 1 的全部 54 个用例仍然全绿，且没有任何断言期望值被修改（唯一 diff 是构造参数），说明重构没有行为漂移；
-- 分层依赖与零依赖两条硬约束被纳入 `npm test`，不只是文档里的承诺。
+- 四个扩展点各有真实实现；`box` 的接入**零内核改动**（提交 `c082226` 对 `src/` 的差异为空），
+  `tree-star` 的接入只用到通用钩子 `onEdited`（新增装饰器不需要动渲染器）；
+- 改代码与改配置两条装配路径**逐字节等价**，由真实进程测试与独立判据脚本双重锁住；
+- 加载器的四类失败按规范文案输出且**不阻断启动**，坏插件不会连累其他插件；
+- `contributes` 声明与实际注册逐类比对，不一致即整插件回滚（不留半个插件）；
+- Phase 1 的全部用例仍然全绿，且没有任何断言期望值被修改，说明重构没有行为漂移；
+- 分层依赖与零依赖两条硬约束被纳入 `npm test`，不只是文档里的承诺；
+- 与 AI 协作中的每一次越界（自造文案、自造映射表、自加行为）都被记录并回退，
+  修正理由以规范原文为依据，见 §5.1.1 / §5.1.2 与 `doc/README.md` §5.8。

@@ -20,28 +20,28 @@
   },
   "headBuckets": {
     "plugin": {
-      "files": 11,
-      "lines": 899,
-      "decisions": 40
+      "files": 14,
+      "lines": 1049,
+      "decisions": 43
     },
     "kernel": {
-      "files": 54,
-      "lines": 3464,
-      "decisions": 333
+      "files": 55,
+      "lines": 3711,
+      "decisions": 357
+    },
+    "other": {
+      "files": 17,
+      "lines": 2065,
+      "decisions": 28
     },
     "assembly": {
       "files": 10,
-      "lines": 639,
-      "decisions": 48
-    },
-    "other": {
-      "files": 16,
-      "lines": 1708,
-      "decisions": 28
+      "lines": 709,
+      "decisions": 54
     },
     "vscode": {
       "files": 5,
-      "lines": 593,
+      "lines": 604,
       "decisions": 61
     }
   }
