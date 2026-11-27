@@ -221,6 +221,22 @@ Copy-Item vscode-svg\dist $dest\dist -Recurse
 4. **截图 3（跳转验证）**：在大纲里点击 `rect#start`，光标应跳到源码 **第 5 行**（`<rect id="start" …/>`）；点击 `text#process-label` 跳到 **第 10 行**。
 5. **截图 4（健壮性，可选）**：在编辑器里把某个 `>` 删掉制造残缺 XML，大纲应**临时清空但不报错/不崩溃**；补回后大纲自动恢复。
 
+### 5.1 已归档的截图
+
+#### 图 A.2：原生大纲视图
+
+![VSCode 原生大纲展示 SVG 嵌套层级](screenshots/02-outline.png)
+
+*图 A.2：`examples/flowchart.svg` 在文本编辑器状态下，左下角原生 **Outline** 视图显示
+`svg > g#flowchart > g#node1 > rect#start / text#start-label`，有 id 的元素显示为 `标签名#id`，
+右侧为对应源码（第 5 行起）。*
+
+> 注：`.svg` 若被 image preview 等**自定义编辑器**接管，活动编辑器就不是 `TextDocument`，
+> 大纲会显示「活动编辑器无法提供大纲信息」；按 §5.0 的说明切回「文本编辑器」即可。
+> 这是运行期才暴露的约束，已记入 `analysis.md` §1.3。
+
+（A.1 的 Explorer 徽标单图待补：`screenshots/01-badge.png`。）
+
 ---
 
 ## 6. 目录结构

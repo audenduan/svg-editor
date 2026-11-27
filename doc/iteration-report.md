@@ -275,8 +275,12 @@ grep -rn "'box'\|'stats'\|'dir'" src/core src/app src/render src/io
 3. **`modified-star` 类装饰器依赖 `onSaved` 契约**：内核在保存、`init`、`read` 后通知，装饰器自行维护状态；
    本次交付的 `(box)` 标签是无状态的，`modified-star` 只在 `tests/decorators.test.ts` 中作为契约示例验证，
    没有作为独立插件交付（它需要"哪个图形被改过"的信息，而内核目前不广播编辑事件）。
-4. **VSCode 扩展的截图需人工完成**：`vscode-svg/README.md` 给出了 F5 与命令行两种启动方式、
-   要截的三张图（Explorer 徽标、大纲层级、点击定位）与编译/测试命令；自动化部分（解析器 5 个用例）已全绿。
+4. **VSCode 扩展的截图部分人工完成**：大纲截图已归档为
+   [`vscode-svg/screenshots/02-outline.png`](../vscode-svg/screenshots/02-outline.png)
+   （原生 Outline 显示 `svg > g#flowchart > g#node1 > rect#start / text#start-label`）；
+   `vscode-svg/README.md` §5.0 记录了三种启动方式与两条运行期约束
+   （选择器必须覆盖工作区根目录、`.svg` 被自定义编辑器接管时无大纲）。
+   Explorer 徽标单图仍待补，自动化部分（解析器 5 个用例）已全绿。
 5. **Phase 1 的实验报告不包含 Phase 2**：Phase 2 的说明集中在本报告的 `doc/` 三份文档里。
 
 ---
