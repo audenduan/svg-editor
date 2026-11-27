@@ -25,7 +25,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const outlineProvider = new SvgOutlineProvider();
   context.subscriptions.push(
     vscode.languages.registerDocumentSymbolProvider(
-      [{ language: 'xml' }, { pattern: '**/*.svg' }],
+      [{ language: 'xml' }, { pattern: '**/*.svg' }, { pattern: '*.svg' }],
       outlineProvider,
     ),
   );
@@ -61,7 +61,8 @@ export function activate(context: vscode.ExtensionContext): void {
 
 ### 1.3 A.2 的实际调用链：`registerDocumentSymbolProvider` → `provideDocumentSymbols`
 
-1. **注册**：`vscode.languages.registerDocumentSymbolProvider(selector, outlineProvider)`（`src/extension.ts`），`selector` 用 `[{ language: 'xml' }, { pattern: '**/*.svg' }]` 匹配 `.svg` 文档。
+1. **注册**：`vscode.languages.registerDocumentSymbolProvider(selector, outlineProvider)`（`src/extension.ts`），`selector` 用 `[{ language: 'xml' }, { pattern: '**/*.svg' }, { pattern: '*.svg' }]` 匹配 `.svg` 文档。
+
 2. **VSCode 回调**：当匹配的文档被打开、切到 Outline 视图、或**文档内容发生变化**时，VSCode 会调用
    `outlineProvider.provideDocumentSymbols(document, token)`（`src/outlineProvider.ts`）。实现里：
    ```ts
@@ -71,6 +72,17 @@ export function activate(context: vscode.ExtensionContext): void {
    ```
    每个 `DocumentSymbol` 的 `range` 用 `document.positionAt(startOffset/endOffset)` 换算成行列；`selectionRange` 用开始标签区间。VSCode 用它渲染大纲树、面包屑，并支持点击跳转。
 3. **自动更新**：因为 VSCode 在 `onDidChangeTextDocument` 之后会重新调用 provider，我们**无需**自己监听文档变化——只要保证每次解析用的是 `document.getText()` 的最新文本（本实现如此）。这同样是控制反转：插件不推动更新，由 VSCode 在合适时机来“拉取”数据。
+
+**选择器为什么要三条**：`**/*.svg` 覆盖工作区内的多级路径；工作区**根目录**下的文件
+（例如把 `examples/` 直接当工作区打开，`flowchart.svg` 的相对路径就是 `flowchart.svg`）
+需要额外一条 `*.svg`；`language: 'xml'` 则覆盖"`*.svg` 被别的语法扩展关联成 xml"的情况。
+**这条是运行时才暴露的坑**：单测直接调 provider 永远发现不了选择器不匹配——
+表现就是大纲显示「活动编辑器无法提供大纲信息」，而 `Ctrl+Shift+O` 同样无输出。
+
+**另一个真实约束**：大纲只对**文本编辑器**有效。若 `.svg` 被 image preview 一类的自定义编辑器接管，
+活动编辑器就不是 `TextDocument`，符号 provider 不会参与，这时需要
+`右键标签 → 重新打开方式 → 文本编辑器`，或用
+`"workbench.editorAssociations": { "*.svg": "default" }` 固定成文本编辑器。
 
 ### 1.4 小结
 

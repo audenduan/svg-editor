@@ -19,7 +19,8 @@
     "commands": [
       {
         "command": "svgEditor.refreshDecorations",
-        "title": "SVG: Refresh File Decorations"
+        "title": "SVG: 刷新文件徽标",
+        "category": "SVG"
       }
     ]
   },

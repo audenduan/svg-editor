@@ -11,6 +11,20 @@ import { SvgOutlineProvider } from './outlineProvider';
 
 const SVG_EXTENSION = /\.svg$/i;
 
+/**
+ * 大纲 provider 的文档选择器。
+ *
+ * 三个条目分别覆盖三种情况，缺一不可：
+ * - `language: 'xml'`：用户把 `.svg` 关联成 xml 语言时也能命中；
+ * - `pattern: '**\/*.svg'`：工作区内的多级路径；
+ * - `pattern: '*.svg'`：工作区**根目录**下的文件。
+ */
+const SVG_DOCUMENT_SELECTOR: vscode.DocumentFilter[] = [
+  { language: 'xml' },
+  { pattern: '**/*.svg' },
+  { pattern: '*.svg' },
+];
+
 export function activate(context: vscode.ExtensionContext): void {
   const decorationProvider = new SvgFileDecorationProvider();
   context.subscriptions.push(decorationProvider);
@@ -18,10 +32,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
   const outlineProvider = new SvgOutlineProvider();
   context.subscriptions.push(
-    vscode.languages.registerDocumentSymbolProvider(
-      [{ language: 'xml' }, { pattern: '**/*.svg' }],
-      outlineProvider,
-    ),
+    vscode.languages.registerDocumentSymbolProvider(SVG_DOCUMENT_SELECTOR, outlineProvider),
   );
 
   // 文档保存 / 文件创建 / 文件删除后刷新装饰，保证徽标与磁盘状态一致。
@@ -39,7 +50,7 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
   );
 
-  // 手动刷新命令（`SVG: Refresh File Decorations`），作为兜底手段。
+  // 手动刷新命令（`SVG: 刷新文件徽标`），作为兜底手段。
   context.subscriptions.push(
     vscode.commands.registerCommand('svgEditor.refreshDecorations', () => {
       decorationProvider.refreshAll();

@@ -158,7 +158,27 @@ code --extensionDevelopmentPath="$PWD/vscode-svg" "$PWD/examples"
 
 注意最后一个参数是**文件夹** `examples`（也可以是仓库根目录），不是 `examples/flowchart.svg`。
 
+方式三（**最省事，不需要 F5，也不需要开发宿主窗口**）：把编译产物装进本机扩展目录，
+然后**完全退出并重新打开** VSCode，扩展会像普通插件一样加载（`activationEvents: ["*"]`）：
+
+```powershell
+node node_modules/typescript/bin/tsc -p vscode-svg/tsconfig.json
+$dest = Join-Path $env:USERPROFILE ".vscode\extensions\svg-editor-pj1.svg-outline-badge-0.1.0"
+New-Item -ItemType Directory -Path $dest -Force | Out-Null
+Copy-Item vscode-svg\package.json $dest
+Copy-Item vscode-svg\dist $dest\dist -Recurse
+```
+
+卸载：删掉上面那个目录，重启 VSCode。
+
+> **为什么大纲会是空的**：`registerDocumentSymbolProvider` 的选择器必须命中文件的**相对工作区路径**。
+> 直接把 `examples/` 当工作区打开时，`flowchart.svg` 的相对路径就是 `flowchart.svg`，
+> 只有 `**/*.svg` 可能不匹配零级目录——所以扩展同时注册了 `*.svg`、`**/*.svg` 和 `language: 'xml'` 三种选择器。
+> 若大纲仍显示「活动编辑器无法提供大纲信息」，先确认窗口里有本扩展（`Developer: Show Running Extensions`）。
+
 > 找不到 Explorer？它在左侧活动栏最上方（两个文件叠在一起的图标），快捷键 `Ctrl+Shift+E`。
+> 中文界面的命令面板按**中文**标题匹配：找大纲要输「大纲」，不是 `outline`；
+> 也可以直接按 `Ctrl+Shift+O`（转到文件中的符号），它用的是同一个符号 provider。
 > 如果它在别的侧栏里，`查看 → 资源管理器` 可以重新调出来。
 
 `examples/flowchart.svg` 已存在于仓库中（14 行），内容结构为：
