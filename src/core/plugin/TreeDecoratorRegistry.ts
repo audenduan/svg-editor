@@ -44,4 +44,11 @@ export class TreeDecoratorRegistry {
       decorator.onDocumentReplaced?.();
     }
   }
+
+  /** 修改类命令成功后广播（`changedIds` 为空表示改动范围未知）。 */
+  public notifyEdited(changedIds: readonly string[]): void {
+    for (const decorator of this.decorators) {
+      decorator.onEdited?.(changedIds);
+    }
+  }
 }

@@ -1,0 +1,10 @@
+{
+  "name": "@svgframe/plugin-tree-star",
+  "version": "0.2.0",
+  "private": true,
+  "description": "modified-star tree decorator plugin for the svgframe CLI",
+  "main": "src/index.ts",
+  "contributes": {
+    "decorators": ["modified-star"]
+  }
+}

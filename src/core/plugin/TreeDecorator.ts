@@ -21,6 +21,15 @@ export interface TreeDecorator {
 
   /** `init` / `read` 替换文档之后调用（重置自身状态）。 */
   onDocumentReplaced?(): void;
+
+  /**
+   * 一条**修改类命令**成功之后调用，`changedIds` 是它改动过的图形 id
+   * （空数组表示"改动范围未知"，例如 `undo` / `redo`）。
+   *
+   * 这是"发生过编辑命令"式 dirty 语义的钩子：装饰器据此把 id 记进自己的字段，
+   * `save` 时由 `onSaved` 清空。内核不知道谁在用这个信号，也不解释它的含义。
+   */
+  onEdited?(changedIds: readonly string[]): void;
 }
 
 /** 一行结构树对应的上下文。 */

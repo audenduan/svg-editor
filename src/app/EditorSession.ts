@@ -1,5 +1,6 @@
 import { EditorError } from '../core/errors/EditorError';
 import { CommandHistory } from '../core/command/CommandHistory';
+import type { Command } from '../core/command/Command';
 import { AddToContainerCommand } from '../core/command/AddToContainerCommand';
 import { CreateShapeCommand } from '../core/command/CreateShapeCommand';
 import { DeleteShapeCommand } from '../core/command/DeleteShapeCommand';
@@ -141,18 +142,18 @@ export class EditorSession {
     const parent = this.resolveContainer(document, containerId);
     this.requireAcceptsChildren(parent, containerId);
     const shape = this.options.extensions.shapeRegistry.createShape(typeName, id, params);
-    return [this.history.run(new CreateShapeCommand(shape, parent))];
+    return [this.run(new CreateShapeCommand(shape, parent), [id])];
   }
 
   public deleteShape(id: string): string[] {
     const shape = this.requireShape(id);
     this.requireRemovable(shape);
-    return [this.history.run(new DeleteShapeCommand(shape))];
+    return [this.run(new DeleteShapeCommand(shape), [id])];
   }
 
   public moveShape(id: string, dx: number, dy: number): string[] {
     const shape = this.requireShape(id);
-    return [this.history.run(new MoveShapeCommand(shape, dx, dy))];
+    return [this.run(new MoveShapeCommand(shape, dx, dy), [id])];
   }
 
   public scaleShape(id: string, factor: number): string[] {
@@ -160,7 +161,7 @@ export class EditorSession {
       throw new EditorError('scale factor must be positive');
     }
     const shape = this.requireShape(id);
-    return [this.history.run(new ScaleShapeCommand(shape, factor))];
+    return [this.run(new ScaleShapeCommand(shape, factor), [id])];
   }
 
   /**
@@ -181,7 +182,12 @@ export class EditorSession {
         }
       },
     };
-    return [this.history.run(new SetAttributeCommand(shape, attributeName, value, handler, context))];
+    return [
+      this.run(new SetAttributeCommand(shape, attributeName, value, handler, context), [
+        id,
+        ...touched.map((target) => target.id),
+      ]),
+    ];
   }
 
   public groupShapes(newGroupId: string, memberIds: readonly string[]): string[] {
@@ -220,7 +226,7 @@ export class EditorSession {
     if (group === null) {
       throw new Error('g provider must produce a container');
     }
-    return [this.history.run(new GroupShapesCommand(group, members))];
+    return [this.run(new GroupShapesCommand(group, members), [newGroupId, ...memberIds])];
   }
 
   public ungroupShape(id: string): string[] {
@@ -235,7 +241,12 @@ export class EditorSession {
     if (shape.parent === this.requireDocument()) {
       throw new EditorError(`cannot ungroup top-level container: ${id}`);
     }
-    return [this.history.run(new UngroupShapeCommand(container))];
+    return [
+      this.run(
+        new UngroupShapeCommand(container),
+        [id, ...container.children.map((child) => child.id)],
+      ),
+    ];
   }
 
   public addTo(containerId: string, shapeId: string): string[] {
@@ -258,7 +269,7 @@ export class EditorSession {
     if (sourceContainer !== null && sourceContainer.isAncestorOf(target)) {
       throw new EditorError(`cannot move a container into its own descendant: ${shapeId}`);
     }
-    return [this.history.run(new AddToContainerCommand(shape, container))];
+    return [this.run(new AddToContainerCommand(shape, container), [containerId, shapeId])];
   }
 
   public reorder(id: string, direction: ReorderDirection): string[] {
@@ -268,7 +279,7 @@ export class EditorSession {
     if (parent !== null && parent.protectsChildren?.() === true) {
       throw new EditorError(`cannot reorder the parts of a composite shape: ${shape.id}`);
     }
-    return [this.history.run(new ReorderShapeCommand(shape, direction))];
+    return [this.run(new ReorderShapeCommand(shape, direction), [id])];
   }
 
   // ------------------------------------------------------------------
@@ -293,12 +304,17 @@ export class EditorSession {
 
   public undo(): string[] {
     this.requireDocument();
-    return [this.history.undo()];
+    const message = this.history.undo();
+    // 改动范围未知（可能是任意子树），按约定传空数组让装饰器自行处理。
+    this.options.extensions.decoratorRegistry.notifyEdited([]);
+    return [message];
   }
 
   public redo(): string[] {
     this.requireDocument();
-    return [this.history.redo()];
+    const message = this.history.redo();
+    this.options.extensions.decoratorRegistry.notifyEdited([]);
+    return [message];
   }
 
   // ------------------------------------------------------------------
@@ -318,6 +334,13 @@ export class EditorSession {
       throw new EditorError(`no such shape: ${id}`);
     }
     return shape;
+  }
+
+  /** 编辑命令的统一入口：执行 → 通知树标签"哪些 id 被改过"。 */
+  private run(command: Command, changedIds: readonly string[]): string {
+    const message = this.history.run(command);
+    this.options.extensions.decoratorRegistry.notifyEdited(changedIds);
+    return message;
   }
 
   /** 复合图形保护契约：其父容器声明 `protectsChildren()` 时，子部件不得删除或挪走。 */
