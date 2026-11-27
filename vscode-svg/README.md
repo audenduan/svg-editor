@@ -235,7 +235,12 @@ Copy-Item vscode-svg\dist $dest\dist -Recurse
 > 大纲会显示「活动编辑器无法提供大纲信息」；按 §5.0 的说明切回「文本编辑器」即可。
 > 这是运行期才暴露的约束，已记入 `analysis.md` §1.3。
 
-（A.1 的 Explorer 徽标单图待补：`screenshots/01-badge.png`。）
+#### 图 A.1：Explorer 文件徽标
+
+![Explorer 中 SVG 文件的图形数量徽标](screenshots/01-badge.png)
+
+*图 A.1：左侧 Explorer 中 `examples/` 下的 `.svg` 文件右侧显示图形数量徽标，
+同目录的 `.txt` 文件没有徽标——文件类型由选择器（`**/*.svg` + 根级 `*.svg`）与文档语言共同判定。*
 
 ---
 

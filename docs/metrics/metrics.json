@@ -1,6 +1,6 @@
 {
   "base": "final",
-  "head": "WORKTREE",
+  "head": "HEAD",
   "baseBuckets": {
     "kernel": {
       "files": 44,
@@ -29,15 +29,15 @@
       "lines": 3711,
       "decisions": 357
     },
+    "assembly": {
+      "files": 10,
+      "lines": 711,
+      "decisions": 54
+    },
     "other": {
       "files": 17,
       "lines": 2065,
       "decisions": 28
-    },
-    "assembly": {
-      "files": 10,
-      "lines": 709,
-      "decisions": 54
     },
     "vscode": {
       "files": 5,

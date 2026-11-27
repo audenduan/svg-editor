@@ -1,15 +1,15 @@
 # 代码指标（由 scripts/metrics.mjs 生成，勿手改）
 
 - 基线（base）：`final`
-- 对比（head）：`WORKTREE`
-- 生成命令：`node scripts/metrics.mjs --base final --head WORKTREE`
+- 对比（head）：`HEAD`
+- 生成命令：`node scripts/metrics.mjs --base final --head HEAD`
 
 ## 按类别：行数
 
 | 类别 | 基线行数 | 当前行数 | 增量 |
 |---|---|---|---|
 | 内核 | 2593 | 3711 | +1118 |
-| 装配处 | 431 | 709 | +278 |
+| 装配处 | 431 | 711 | +280 |
 | 插件 | 0 | 1049 | +1049 |
 | VSCode 扩展 | 0 | 604 | +604 |
 | 其他 | 955 | 2065 | +1110 |
@@ -47,7 +47,7 @@
 | `src/host/assemble.ts` | 装配处 | 101 | 4 |
 | `src/host/builtinPlugin.ts` | 装配处 | 169 | 12 |
 | `src/host/NodePluginModuleLoader.ts` | 装配处 | 59 | 5 |
-| `src/main.ts` | 装配处 | 151 | 11 |
+| `src/main.ts` | 装配处 | 153 | 11 |
 | `src/app/EditorSession.ts` | 内核 | 379 | 46 |
 | `src/core/command/AddToContainerCommand.ts` | 内核 | 34 | 1 |
 | `src/core/command/Command.ts` | 内核 | 15 | 0 |
