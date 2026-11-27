@@ -176,7 +176,7 @@ Phase 2 在同一仓库继续演进：**① VSCode 扩展**（SVG 徽标 + 大�
 | 保持原有功能行为不变 | 内核不含插件名分支 | Phase 1 用例断言一字未改即全绿；不加载插件时 `tree` 逐字节同 Phase 1 |
 | 加载器健壮性 | `src/core/config/PluginManifestLoader.ts`、`src/core/plugin/PluginActivation.ts`、`src/host/NodePluginModuleLoader.ts` | `tests/configLoader.test.ts`（20 例）、`tests/pluginActivation.test.ts`（8 例）、`tests/assembly.test.ts`（14 例） |
 | 文档 | 本文件 + `extension-points.md` + `iteration-report.md` + `adr.md` + `vscode-svg/*` | — |
-| 提交历史与 tag | 19 个过程提交（`final..p2`）+ 最终 `p2` | `git log --oneline` |
+| 提交历史与 tag | `final..p2` 的分步提交（框架 → 插件 → 装配 → 文档）+ 最终 `p2` | `git log --oneline` |
 
 ### 5.2 重构前后的架构变化
 
