@@ -148,8 +148,10 @@ interface AttributeApplyContext { findShape(id: string): Shape | null; touch(sha
 
 **本次实现**：
 
-- `box-fill`：把 `fill` 同时写到内部 `<rect>` 与 `<text>`（`read` 读底板的值，供 undo 恢复）；
-- `box-label`：把 `label` 写进内部 `<text>` 的元素内容。
+- `box-fill`：底层色写到内部 `<rect>`，并给内部 `<text>` 配一个在该底色上可读的对比色
+  （`#111111` / `#ffffff`，只对十六进制颜色计算亮度；`read` 读底板的值，供 undo 恢复）。
+  一次 `set` 写两个子部件、两种语义，仍是**一个** undo 单元；
+- `box-label`：把 `label` 写进内部 `<text>` 的元素内容（不在 `<g>` 上留无意义的属性）。
 
 ---
 

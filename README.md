@@ -32,7 +32,7 @@ svg (800x600)
 npm install
 npm run cli          # 交互式 REPL（svg> 提示符），仅内置插件
 npm run cli < script # 脚本回放：以 # 开头的行是注释，逐行执行
-npm test             # 构建 → 依赖纪律检查 → 分层检查 → 102 个测试用例
+npm test             # 构建 → 依赖纪律检查 → 分层检查 → 125 个测试用例
 ```
 
 ### Phase 2：插件化的两种装配方式

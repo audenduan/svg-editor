@@ -1,7 +1,7 @@
 # PJ1 Phase 2 迭代报告
 
 **基线**：Phase 1 提交 `final`（`a3761d3`，54 个测试全绿，零运行时依赖）
-**终点**：Phase 2 提交链末端，标签 `p2`（102 个测试全绿，零运行时依赖）
+**终点**：Phase 2 提交链末端，标签 `p2`（125 个测试全绿，零运行时依赖）
 **约束**：Phase 1 行为不可变——未加载任何插件时一切输出与 `final` 逐字节相同
 
 ---
@@ -16,7 +16,7 @@ Phase 2 要求把 Phase 1 的单体 CLI 改造成**插件化架构**，四个扩
 |---|---|---|---|
 | 1 | 四个扩展点各有一个非平凡实现 | 见 §4 表格 | ✅ 4/4 |
 | 2 | 两种装配方式的输出逐字节相同 | `tests/assembly.test.ts` 起真实进程比较 | ✅ |
-| 3 | 未加载插件时与 Phase 1 逐字节相同 | Phase 1 的 54 个用例全部通过，其中**断言原文 0 改动**（唯一改动是一个构造函数调用多了两个参数，见 §3.1）| ✅ |
+| 3 | 未加载插件时与 Phase 1 一致 | 直接用 worktree 编译 `final` 并**逐字节比对进程输出**（§5.3.1）：4 个示例脚本 + 5212 字节错误路径矩阵 + 保存的 SVG 全部相同；唯一差异是 `help` 列宽缺陷的有意修复 | ✅ |
 | 4 | 接入插件不需要改内核 | `git show --stat c082226 -- src` 输出为空 | ✅ |
 | 5 | 错误可区分 | `unknown command` / `unknown shape type` / `duplicate registration` / `cannot load plugin` | ✅ |
 | 6 | 注册原子性 | 冲突或 activate 抛错时不留半个插件 | ✅ |
@@ -121,9 +121,11 @@ Phase 2 要求把 Phase 1 的单体 CLI 改造成**插件化架构**，四个扩
 | 4 | `c082226` | `feat(plugins)`: `box` + fill/label 处理器 + `(box)` 标签 | 80 | **本提交对 `src/**` 改动为 0** |
 | 5 | `d3f9727` | `test(composition)`: 跨插件组合与基线回退 | 87 | 缺插件时的两类错误、装饰器移除后回到基线 |
 | 6 | `bcdfcb7` | `feat(config)`: JSON 清单加载器 + 第二种装配 | 99 | 两种装配逐字节相同的自动化证明 |
-| 7 | 本次 | `docs`: 扩展点清单、迭代报告、ADR、指标 | 102 | 本文件所在提交，打标签 `p2` |
+| 7 | `5bfebbb` | `docs`: 扩展点清单、迭代报告、ADR、指标 | 102 | 打标签 `p2` |
+| 8 | `e640f69` | `docs(phase2)`: 校正文档中三处夸大表述 | 102 | 让每个判据都能被命令复现 |
+| 9 | 本次 | `fix(debug)`: 复合图形四类操作保护 + 装配失败即退出 + help 列宽 | 123 | 全面 debug 的产物，见 §5.1.1；`p2` 随之前移 |
 
-### 3.1 过程中的三次真实返工（都已固化在提交链里）
+### 3.1 过程中的四次真实返工（都已固化在提交链里）
 
 1. **`SetAttributeCommand` 签名变更**带来 Phase 1 测试的编译错误。处理方式不是改期望值，
    而是在构造调用里补上显式的 `null` 处理器与空上下文（`findShape: () => null, touch: () => {}`）。
@@ -134,6 +136,10 @@ Phase 2 要求把 Phase 1 的单体 CLI 改造成**插件化架构**，四个扩
 3. **Windows 路径与 BOM**：清单加载器最初用 `path` 的语义处理 `\`，导致盘符被当作目录名；
    修好后又在测试中发现 PowerShell 写的 JSON 带 BOM 会让 `JSON.parse` 失败。
    结论是**修产品而不是改测试**——用户手写配置带 BOM 在 Windows 上极其常见。
+4. **保护契约写漏了方向**：`protectsChildren()` 最初只挡住"子部件离开"（`delete`/`addto`），
+   没挡住"新子部件进来"（`create … in`）和"重新排序"（`front`/`back`），
+   于是能构造出"保存成功、读回失败"的自毁文件。这不是测试没写，是**思维没换位**：
+   写保护逻辑时只想着已有结构，没想着结构还会被谁改写。补全后新增了 5 组回归用例（§5.1.1）。
 
 ---
 
@@ -144,7 +150,7 @@ Phase 2 要求把 Phase 1 的单体 CLI 改造成**插件化架构**，四个扩
 | 图形类型 | `BoxProvider`（+3 可选钩子） | `ShapeTypeRegistry.createShape / resolveProvider` | `matchesElement` 让 `box` 与 `g` 共用标签 |
 | 命令 | `stats`、`dir`、以及内置 20 条 | `CommandDispatcher`（已无内置表） | `CommandContext` 只暴露只读视图 |
 | 结构树 | `BoxTypeLabel` | `TreeRenderer.suffixFor` | 装饰器返回 `''` 时行尾不加空格，基线不变 |
-| 属性 | `BoxFillHandler`、`BoxLabelHandler` | `SetAttributeCommand` 的 handler 分支 | 子树快照保证多字段修改仍是单次 undo |
+| 属性 | `BoxFillHandler`、`BoxLabelHandler` | `SetAttributeCommand` 的 handler 分支 | 子树快照保证多字段修改仍是单次 undo；`fill` 翻译成"底板底色 + 标签对比色"两种语义 |
 
 细节（接口签名、错误文案、注册顺序语义）见 [`doc/extension-points.md`](extension-points.md)。
 
@@ -163,8 +169,39 @@ Phase 2 要求把 Phase 1 的单体 CLI 改造成**插件化架构**，四个扩
 | 装饰器契约 | `tests/decorators.test.ts` | `modified-star` 形态示例：`onSaved`/`onDocumentReplaced` 复位、空串不留空格 |
 | 组合 | `tests/composition.test.ts` | 跨插件协作、缺插件退化、顺序无关、基线字节 |
 | 装配 | `tests/assembly.test.ts`、`tests/configLoader.test.ts` | **真实 CLI 进程**逐字节比较两种装配、非法配置、缺模块 |
+| help 排版 | `tests/help.test.ts` | 用法列宽自适应、说明列对齐、插件命令出现在 help |
 
-（装饰器契约用例加入后总数为 102：99 个功能用例 + 3 个 `modified-star` 示例用例。）
+（含装饰器契约用例与 debug 回归用例，总数为 123。）
+
+### 5.1.1 全面 debug 阶段发现并修掉的 6 个缺陷
+
+代码写完、测试全绿，不等于没有 bug。这一轮专门**换角度攻击**（而不是重跑已有断言），
+方法是：写探针脚本把命令组合灌进真实装配，观察不变量是否还能被破坏。结果找到 5 个：
+
+| # | 缺陷 | 表现 | 根因 | 修复 |
+|---|---|---|---|---|
+| 1 | `create … in <box>` / `addto <box> <x>` 能往 box 里塞第三个子部件 | 之后 `save` 正常、`read` 报 `invalid box`——**用户自己的文件变得读不回来** | 只保护了"删"与"移走"，没保护"加入" | 内核加 `requireAcceptsChildren`：容器 `protectsChildren()` 为真时拒绝加子元素 |
+| 2 | `front` / `back` 能打乱 box 的子部件顺序 | 同上，round-trip 直接失败 | 顺序被当作可自由调整的显示属性，但它是 box 不变量的一部分 | `reorder` 前检查父容器保护契约 |
+| 3 | `group <newId> <box 的子部件>` 能把必要子部件"借走" | box 少一个子部件，结构损坏 | `group` 内部移出成员，绕过了删除保护 | `group` 对每个成员执行 `requireRemovable` |
+| 4 | `--config` 加载失败后仍进入 REPL | 用户看到 `unknown command: stats` 而非真正的配置错误 | 入口把"装配失败"当成"可继续" | 装配失败即打印 `error:` 退出（运行期失败 1，用法错 2）；横幅永远第一行，`warning:` 由 `Repl` 的 `prelude` 在横幅后输出 |
+| 5 | `help` 用法列固定 46 列，最长用法溢出 | `create <type> <id> [params…] [in <containerId>]create a shape` 说明贴死在用法上 | 列宽写死；Phase 1 遗留 | 列宽改为"最长用法 + 2"，最小 46 |
+| 6 | `set <box> fill <浅色>` 把标签文字也染成浅色 | 标签与底色同色，**文字消失** | 处理器把同一个值刷到两个子部件，忽略了 `<text>` 的 `fill` 是"字的颜色" | 底板收底色，标签收对比色（亮度阈值 + 只认十六进制） |
+
+前 3 个都是**同一个思维盲区**：实现 `protectsChildren()` 时只想到"别让子部件离开"，
+没想到"别让新东西进来"和"别重排"。修法把契约补全为四类操作（删/移走/加入/重排），
+且仍然只依赖容器自报的布尔值——内核不认识 `box`。
+
+第 4 个的教训是**失败路径也要当正常路径设计**：装配失败时继续跑，会把"配置写错"
+伪装成"命令不存在"，排查成本从一眼变成一小时。
+
+第 5 个是 `final` 上就存在的排版缺陷（Phase 1 遗留）。修它使**当前版本与 `final` 的输出
+在这一行不同**——这是唯一一处有意偏离，见 §5.3.1 的逐字节复核说明。
+
+第 6 个（`fill` 把标签染色）属于**语义**层面的 bug，测试全绿也发现不了：两个子部件都拿到了
+用户给的值，`assert` 完全成立，但屏幕上的字没了。它只能靠"看到输出后觉得不对"发现——
+所以 debug 阶段刻意把每个命令的真实输出**打印出来读一遍**，而不只看断言是否通过。
+这条也回答了"插件该拥有什么"：不是"批量写同一个值"（白名单也能做），而是
+"把用户级语义翻译成子部件级语义"（`fill` 在底板与文字上是两种东西）。
 
 ### 5.2 自动化闸门（`npm test` 一次跑完）
 
@@ -172,7 +209,7 @@ Phase 2 要求把 Phase 1 的单体 CLI 改造成**插件化架构**，四个扩
 tsc（strict, noUnusedLocals, noUnusedParameters, noFallthroughCasesInSwitch）
   → check-dependencies.mjs   零运行时依赖 + 内核不 import node 内置模块
   → check-layers.mjs         分层依赖 0 违规（内核不依赖上层/插件，插件不碰装配层）
-  → node --test              102 个用例
+  → node --test              125 个用例
 ```
 
 `check-layers.mjs` 是这次新增的：把"插件化"从口头约束变成 CI 约束。
@@ -188,14 +225,35 @@ grep -rn "'box'\|'stats'\|'dir'" src/core src/app src/render src/io
 
 | 类别 | 基线行数 | 当前行数 | 判断点增量 |
 |---|---|---|---|
-| 内核（core/app/io/render） | 2593 | 3443 | +101 |
-| 装配处（cli/host/入口） | 431 | 579 | +15 |
-| 插件（plugins/） | 0 | 768 | +35 |
+| 内核（core/app/io/render） | 2593 | 3464 | +105 |
+| 装配处（cli/host/入口） | 431 | 639 | +17 |
+| 插件（plugins/） | 0 | 899 | +40 |
 | VSCode 扩展 | 0 | 593 | +61 |
-| 测试与其他 | 955 | 1508 | +10 |
+| 测试与其他 | 955 | 1708 | +18 |
+
+（数字来自 `docs/metrics/metrics.md`，由 `node scripts/metrics.mjs --base final --head WORKTREE` 生成，不接受手填。）
 
 指标不用于评分，用于回答"复杂度去了哪里"：**新增复杂度主要落在插件与测试**，
-内核增量集中在四个接口与注册表；装配处只涨了 148 行（清单加载桥接 + 第二个入口）。
+内核增量集中在四个接口与注册表；装配处只涨了 208 行（清单加载桥接 + 第二个入口 + 入口的失败策略）。
+
+### 5.3.1 与 `final` 的逐字节复核（verify 阶段的做法与结论）
+
+"未加载插件时与 Phase 1 一致"这句话不是靠"旧测试还绿"推断的，而是**直接比对两个版本的进程输出**：
+
+1. `git worktree add $TEMP\svgfinal final`，用同一份 `tsc` 编译出 Phase 1 的 `dist/`；
+2. 准备一份覆盖全部错误路径的脚本（`canvas/init/create/move/scale/set/show/tree/group/ungroup/addto/front/back/delete/undo/redo/save/read/help`，
+   含参数个数错、非法数值、未闭合引号、空行、注释行等，共 5212 字节输出）；
+3. 两个版本在**同一工作目录**里回放，`Out-File` 落盘后做 `-ceq` 全等比较；
+4. 再比 `examples/*.txt` 四个示例脚本，以及保存出来的 SVG 文件本身。
+
+结论：
+
+| 比对对象 | 结果 |
+|---|---|
+| `examples/flowchart.txt`、`hello.txt`、`other-session.txt`、`plugin-demo.txt` | 逐字节相同（4/4） |
+| 5212 字节的错误路径回归矩阵 | 除 `help` 段外逐字节相同 |
+| 保存的 SVG 文件（含 box 序列化） | 逐字节相同 |
+| 唯一差异 | `help` 的用法列宽（缺陷 5 的有意修复）；差异**完全落在 `commands:` 到 `notes:` 之间**的 19 行，其前后内容 `-ceq` 全等 |
 
 ### 5.4 判据自检
 
@@ -203,6 +261,8 @@ grep -rn "'box'\|'stats'\|'dir'" src/core src/app src/render src/io
   `grep -rn "'box'\|'stats'\|'dir'"` 无命中；而边界本身由 `check-layers` 机械检查（import 关系）；
 - 插件不能绕过原子性：`activatePlugin` 是唯一加载路径，方式 B 也必须经过它；
 - 缺插件时错误可区分且不崩溃，结构树回到 Phase 1 字节；
+- 装配失败不进入 REPL：`--config` 读不到/写错/插件加载失败一律 `error:` + 退出码 1（用法错为 2）；
+- 复合图形的内部结构四类操作全部被拒（加/删/移走/重排），且 `save` 后的文件一定能 `read` 回来；
 - 所有错误都是 `EditorError`，CLI 统一渲染成 `error: …`，退出码语义不变。
 
 ---

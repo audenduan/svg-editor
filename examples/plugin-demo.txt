@@ -1,7 +1,11 @@
+# 三个内建插件演示：box 图形（含 fill/label 属性处理器）+ stats / dir 命令
 init 400 200
 create box n1 10 20 100 40 start
-create rect r 0 0 5 5
-stats
+create rect r 130 20 60 40
+set n1 fill #eef4ff
+set n1 label "BEGIN"
 tree
+stats
+# dir 列出当前工作目录，输出取决于你在哪个目录回放
 dir
 save out.svg

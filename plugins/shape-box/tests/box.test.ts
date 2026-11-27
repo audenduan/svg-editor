@@ -31,19 +31,20 @@ test('box：保存/读回 round-trip 逐字节一致', () => {
   assert.equal(second.files.read('b.svg'), saved, 'round-trip 必须逐字节稳定');
 });
 
-test('box：set fill 传播到两个子部件，一次 undo 整体回滚', () => {
+test('box：set fill 写底板底色 + 标签自动配色，一次 undo 整体回滚', () => {
   const harness = createHarness([boxPlugin]);
   runLines(harness.app, [
     'init 400 200',
     'create box n1 10 20 100 40 "start"',
-    'set n1 fill red',
+    'set n1 fill #223344',
     'show n1-rect',
     'show n1-label',
     'undo',
     'show n1-rect',
+    'show n1-label',
   ]);
   const lines = harness.out.lines;
-  assert.ok(lines.includes('box#n1 updated: fill=red'));
+  assert.ok(lines.includes('box#n1 updated: fill=#223344'));
 
   // 按 `show` 的输出分段，逐段断言（show 的样式行带两格缩进）
   const sections: string[][] = [];
@@ -54,14 +55,35 @@ test('box：set fill 传播到两个子部件，一次 undo 整体回滚', () =>
       (sections[sections.length - 1] as string[]).push(line);
     }
   }
-  assert.equal(sections.length, 3, '应有 3 段 show 输出');
-  const [rectAfterSet, labelAfterSet, rectAfterUndo] = sections as [string[], string[], string[]];
-  assert.ok(rectAfterSet.some((line) => line.trim() === 'fill=red'), '底板 fill 应变为 red');
-  assert.ok(labelAfterSet.some((line) => line.trim() === 'fill=red'), '标签文字 fill 也应是 red');
+  assert.equal(sections.length, 4, '应有 4 段 show 输出');
+  const [plateAfterSet, labelAfterSet, plateAfterUndo, labelAfterUndo] = sections as [
+    string[],
+    string[],
+    string[],
+    string[],
+  ];
+  assert.ok(plateAfterSet.some((line) => line.trim() === 'fill=#223344'), '底板应是用户给的颜色');
   assert.ok(
-    rectAfterUndo.every((line) => line.trim() !== 'fill=red'),
-    'undo 后底板不再有 red（回到创建时的 fill）',
+    labelAfterSet.some((line) => line.trim() === 'fill=#ffffff'),
+    '深色底上标签自动用白字（否则字与底同色，标签看不见）',
   );
+  assert.ok(plateAfterUndo.every((line) => line.trim() !== 'fill=#223344'), '一次 undo 底板回滚');
+  assert.ok(labelAfterUndo.every((line) => line.trim() !== 'fill=#ffffff'), '一次 undo 标签也回滚');
+});
+
+test('box：浅色底自动配深色标签，标签始终保持可读', () => {
+  const harness = createHarness([boxPlugin]);
+  runLines(harness.app, ['init 400 200', 'create box n1 0 0 100 40 "x"', 'set n1 fill #eef4ff', 'show n1-label']);
+  const label = harness.out.lines.slice(harness.out.lines.findIndex((line) => line.startsWith('text#n1-label')));
+  assert.ok(label.some((line) => line.trim() === 'fill=#111111'), '浅色底上标签应为深色');
+});
+
+test('box：非十六进制颜色不猜对比色（只动底板）', () => {
+  const harness = createHarness([boxPlugin]);
+  runLines(harness.app, ['init 400 200', 'create box n1 0 0 100 40 "x"', 'set n1 fill tomato', 'show n1-rect', 'show n1-label']);
+  const text = harness.out.lines.join('\n');
+  assert.match(text, /fill=tomato/, '底板收到原样颜色值');
+  assert.equal(/text#n1-label[\s\S]*fill=/.test(text), false, '无法判定亮度时不该改标签颜色');
 });
 
 test('box：set label 改写内部文字，undo 恢复', () => {

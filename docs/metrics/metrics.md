@@ -8,11 +8,11 @@
 
 | 类别 | 基线行数 | 当前行数 | 增量 |
 |---|---|---|---|
-| 内核 | 2593 | 3443 | +850 |
-| 装配处 | 431 | 579 | +148 |
-| 插件 | 0 | 768 | +768 |
+| 内核 | 2593 | 3464 | +871 |
+| 装配处 | 431 | 639 | +208 |
+| 插件 | 0 | 899 | +899 |
 | VSCode 扩展 | 0 | 593 | +593 |
-| 其他 | 955 | 1508 | +553 |
+| 其他 | 955 | 1708 | +753 |
 
 ## 按类别：文件数
 
@@ -22,17 +22,17 @@
 | 装配处 | 7 | 10 | +3 |
 | 插件 | 0 | 11 | +11 |
 | VSCode 扩展 | 0 | 5 | +5 |
-| 其他 | 9 | 15 | +6 |
+| 其他 | 9 | 16 | +7 |
 
 ## 按类别：圈复杂度增量（判断点计数）
 
 | 类别 | 基线 | 当前 | 增量 |
 |---|---|---|---|
-| 内核 | 228 | 329 | +101 |
-| 装配处 | 31 | 46 | +15 |
-| 插件 | 0 | 35 | +35 |
+| 内核 | 228 | 333 | +105 |
+| 装配处 | 31 | 48 | +17 |
+| 插件 | 0 | 40 | +40 |
 | VSCode 扩展 | 0 | 61 | +61 |
-| 其他 | 10 | 22 | +12 |
+| 其他 | 10 | 28 | +18 |
 
 ## 文件清单与职责（当前）
 
@@ -41,14 +41,14 @@
 | `src/cli/CliApplication.ts` | 装配处 | 47 | 7 |
 | `src/cli/CommandDispatcher.ts` | 装配处 | 45 | 1 |
 | `src/cli/CommandLineTokenizer.ts` | 装配处 | 40 | 7 |
-| `src/cli/HelpText.ts` | 装配处 | 20 | 1 |
+| `src/cli/HelpText.ts` | 装配处 | 25 | 1 |
 | `src/cli/OutputPort.ts` | 装配处 | 13 | 0 |
-| `src/cli/Repl.ts` | 装配处 | 51 | 4 |
+| `src/cli/Repl.ts` | 装配处 | 59 | 6 |
 | `src/host/assemble.ts` | 装配处 | 77 | 3 |
 | `src/host/builtinPlugin.ts` | 装配处 | 169 | 12 |
 | `src/host/NodePluginModuleLoader.ts` | 装配处 | 47 | 1 |
-| `src/main.ts` | 装配处 | 70 | 10 |
-| `src/app/EditorSession.ts` | 内核 | 335 | 42 |
+| `src/main.ts` | 装配处 | 117 | 10 |
+| `src/app/EditorSession.ts` | 内核 | 356 | 46 |
 | `src/core/command/AddToContainerCommand.ts` | 内核 | 34 | 1 |
 | `src/core/command/Command.ts` | 内核 | 15 | 0 |
 | `src/core/command/CommandHistory.ts` | 内核 | 71 | 4 |
@@ -103,14 +103,15 @@
 | `src/render/ShowRenderer.ts` | 内核 | 9 | 0 |
 | `src/render/TreeRenderer.ts` | 内核 | 71 | 5 |
 | `src/main-code.ts` | 其他 | 28 | 0 |
-| `tests/assembly.test.ts` | 其他 | 97 | 5 |
+| `tests/assembly.test.ts` | 其他 | 142 | 7 |
 | `tests/command.test.ts` | 其他 | 223 | 0 |
 | `tests/composition.test.ts` | 其他 | 137 | 1 |
-| `tests/configLoader.test.ts` | 其他 | 52 | 2 |
+| `tests/configLoader.test.ts` | 其他 | 146 | 3 |
 | `tests/decorators.test.ts` | 其他 | 74 | 2 |
 | `tests/errors.test.ts` | 其他 | 133 | 2 |
 | `tests/extensions.test.ts` | 其他 | 147 | 2 |
 | `tests/geometry.test.ts` | 其他 | 126 | 1 |
+| `tests/help.test.ts` | 其他 | 61 | 3 |
 | `tests/io.test.ts` | 其他 | 126 | 1 |
 | `tests/registry.test.ts` | 其他 | 90 | 3 |
 | `tests/support/BufferOutput.ts` | 其他 | 10 | 0 |
@@ -122,12 +123,12 @@
 | `plugins/command-dir/tests/dir.test.ts` | 插件 | 108 | 2 |
 | `plugins/command-stats/src/index.ts` | 插件 | 55 | 4 |
 | `plugins/command-stats/tests/stats.test.ts` | 插件 | 51 | 1 |
-| `plugins/shape-box/src/BoxAttributeHandlers.ts` | 插件 | 53 | 7 |
+| `plugins/shape-box/src/BoxAttributeHandlers.ts` | 插件 | 96 | 11 |
 | `plugins/shape-box/src/BoxProvider.ts` | 插件 | 88 | 9 |
 | `plugins/shape-box/src/BoxShape.ts` | 插件 | 69 | 0 |
 | `plugins/shape-box/src/BoxTypeLabel.ts` | 插件 | 15 | 0 |
 | `plugins/shape-box/src/index.ts` | 插件 | 22 | 0 |
-| `plugins/shape-box/tests/box.test.ts` | 插件 | 197 | 6 |
+| `plugins/shape-box/tests/box.test.ts` | 插件 | 285 | 7 |
 | `vscode-svg/src/extension.ts` | VSCode 扩展 | 53 | 1 |
 | `vscode-svg/src/fileDecorationProvider.ts` | VSCode 扩展 | 53 | 3 |
 | `vscode-svg/src/outlineParser.ts` | VSCode 扩展 | 276 | 46 |
