@@ -31,7 +31,7 @@ test('box：保存/读回 round-trip 逐字节一致', () => {
   assert.equal(second.files.read('b.svg'), saved, 'round-trip 必须逐字节稳定');
 });
 
-test('box：set fill 写底板底色 + 标签自动配色，一次 undo 整体回滚', () => {
+test('box：set fill 只改内部矩形的 fill（规范 §3.1），一次 undo 整体回滚', () => {
   const harness = createHarness([boxPlugin]);
   runLines(harness.app, [
     'init 400 200',
@@ -62,28 +62,33 @@ test('box：set fill 写底板底色 + 标签自动配色，一次 undo 整体�
     string[],
     string[],
   ];
-  assert.ok(plateAfterSet.some((line) => line.trim() === 'fill=#223344'), '底板应是用户给的颜色');
-  assert.ok(
-    labelAfterSet.some((line) => line.trim() === 'fill=#ffffff'),
-    '深色底上标签自动用白字（否则字与底同色，标签看不见）',
+  assert.ok(plateAfterSet.some((line) => line.trim() === 'fill=#223344'), '底板应收到用户给的填充色');
+  assert.equal(
+    labelAfterSet.some((line) => line.trim().startsWith('fill=')),
+    false,
+    '规范规定 fill 只落到底板矩形，不能顺手改写标签字色',
   );
   assert.ok(plateAfterUndo.every((line) => line.trim() !== 'fill=#223344'), '一次 undo 底板回滚');
-  assert.ok(labelAfterUndo.every((line) => line.trim() !== 'fill=#ffffff'), '一次 undo 标签也回滚');
+  assert.equal(labelAfterUndo.some((line) => line.trim().startsWith('fill=')), false);
 });
 
-test('box：浅色底自动配深色标签，标签始终保持可读', () => {
+test('box：set fill 的 undo 恢复的是底板原来的值，而不是清空属性', () => {
   const harness = createHarness([boxPlugin]);
-  runLines(harness.app, ['init 400 200', 'create box n1 0 0 100 40 "x"', 'set n1 fill #eef4ff', 'show n1-label']);
-  const label = harness.out.lines.slice(harness.out.lines.findIndex((line) => line.startsWith('text#n1-label')));
-  assert.ok(label.some((line) => line.trim() === 'fill=#111111'), '浅色底上标签应为深色');
-});
-
-test('box：非十六进制颜色不猜对比色（只动底板）', () => {
-  const harness = createHarness([boxPlugin]);
-  runLines(harness.app, ['init 400 200', 'create box n1 0 0 100 40 "x"', 'set n1 fill tomato', 'show n1-rect', 'show n1-label']);
-  const text = harness.out.lines.join('\n');
-  assert.match(text, /fill=tomato/, '底板收到原样颜色值');
-  assert.equal(/text#n1-label[\s\S]*fill=/.test(text), false, '无法判定亮度时不该改标签颜色');
+  runLines(harness.app, [
+    'init 400 200',
+    'create box n1 0 0 100 40 "x"',
+    'set n1 fill #eef4ff',
+    'undo',
+    'show n1-rect',
+  ]);
+  const plate = harness.out.lines.slice(
+    harness.out.lines.findIndex((line) => line.startsWith('rect#n1-rect')),
+  );
+  assert.ok(
+    plate.some((line) => line.trim().startsWith('fill=#')),
+    'undo 之后底板仍是创建时的颜色（handler.read 提供旧值）',
+  );
+  assert.equal(plate.some((line) => line.trim() === 'fill=#eef4ff'), false, '撤销后不应保留新值');
 });
 
 test('box：set label 改写内部文字，undo 恢复', () => {
