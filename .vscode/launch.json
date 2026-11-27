@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "运行 svg-editor 扩展（F5）",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/vscode-svg",
+        "${workspaceFolder}/examples"
+      ],
+      "outFiles": ["${workspaceFolder}/vscode-svg/dist/**/*.js"],
+      "preLaunchTask": "build-vscode"
+    }
+  ]
+}

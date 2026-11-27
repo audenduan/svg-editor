@@ -1,0 +1,12 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build-vscode",
+      "type": "shell",
+      "command": "node node_modules/typescript/bin/tsc -p vscode-svg/tsconfig.json",
+      "problemMatcher": ["$tsc"],
+      "presentation": { "reveal": "silent", "panel": "shared" }
+    }
+  ]
+}

@@ -137,6 +137,30 @@ code --extensionDevelopmentPath="C:\Users\34817\Documents\deepseek-harness\默�
 
 ## 5. 手动截图步骤（用 `examples/flowchart.svg` 演示）
 
+### 5.0 先启动 Extension Development Host（这一步最容易走错）
+
+**前提**：必须在 VSCode 里**打开整个仓库文件夹**（`svg-editor`），而不是只打开一个 `.svg` 文件。
+只打开文件时 VSCode 没有工作区，左侧 Explorer 显示 “You have not yet opened a folder”，
+而 `.svg` 徽标是挂在**文件树条目**上的装饰，没有文件树自然就看不到徽标。
+
+方式一（推荐，仓库已内置 `.vscode/launch.json`）：
+
+1. VSCode 里 `文件 → 打开文件夹`，选择仓库根目录 `svg-editor`；
+2. 按 **F5**，选择配置 **「运行 svg-editor 扩展（F5）」**；
+3. 自动先编译扩展（任务 `build-vscode`），再弹出一个标题为 `[Extension Development Host]` 的新窗口，
+   该窗口已经打开了 `examples` 文件夹。
+
+方式二（命令行）：
+
+```powershell
+code --extensionDevelopmentPath="$PWD/vscode-svg" "$PWD/examples"
+```
+
+注意最后一个参数是**文件夹** `examples`（也可以是仓库根目录），不是 `examples/flowchart.svg`。
+
+> 找不到 Explorer？它在左侧活动栏最上方（两个文件叠在一起的图标），快捷键 `Ctrl+Shift+E`。
+> 如果它在别的侧栏里，`查看 → 资源管理器` 可以重新调出来。
+
 `examples/flowchart.svg` 已存在于仓库中（14 行），内容结构为：
 
 ```
@@ -158,7 +182,7 @@ code --extensionDevelopmentPath="C:\Users\34817\Documents\deepseek-harness\默�
 
 **步骤：**
 
-1. 启动 Extension Development Host，打开 `svg-editor` 文件夹。
+1. 启动 Extension Development Host（见 §5.0），确认新窗口的 Explorer 里能看到 `examples` 文件夹。
 2. **截图 1（A.1 徽标）**：在左侧 **Explorer** 里展开 `examples/`，可见 `flowchart.svg` 文件名右侧出现灰色 `[]` 徽标；同目录的 `flowchart.txt`、`hello.txt` **没有**徽标。鼠标悬停 `flowchart.svg` 显示提示 **“SVG file”**。
 3. **截图 2（A.2 大纲）**：打开 `examples/flowchart.svg`，展开 VSCode 原生 **Outline（大纲）** 视图（`查看 → 打开视图 → 大纲`），应看到层级：
 
