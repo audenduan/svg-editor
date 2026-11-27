@@ -29,6 +29,11 @@ export interface Plugin {
   /** 插件名（清单 `name`，加载器报错与清单校验用）。 */
   readonly name: string;
 
-  /** 加载过程的一环：在 `PluginContext` 上完成注册。 */
-  activate(context: PluginContext): void;
+  /**
+   * 加载过程的一环：在 `PluginContext` 上完成注册。
+   *
+   * `options` 来自清单条目的 `options` 段（规范键名；`config` 为同义旧键），
+   * 内核**原样透传、不解释**其结构——插件自己校验，缺省为 `undefined`。
+   */
+  activate(context: PluginContext, options?: unknown): void;
 }

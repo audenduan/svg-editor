@@ -3,7 +3,7 @@
   "plugins": [
     {
       "name": "@svgframe/plugin-shape-box",
-      "entry": "builtin:shape-box",
+      "module": "./dist/plugins/shape-box/src/index.js",
       "contributes": {
         "shapes": ["box"],
         "attributes": ["box-fill", "box-label"],
@@ -11,15 +11,22 @@
       }
     },
     {
+      "name": "@svgframe/plugin-tree-star",
+      "module": "./dist/plugins/tree-star/src/index.js",
+      "contributes": {
+        "decorators": ["modified-star"]
+      }
+    },
+    {
       "name": "@svgframe/plugin-command-stats",
-      "entry": "builtin:command-stats",
+      "module": "./dist/plugins/command-stats/src/index.js",
       "contributes": {
         "commands": ["stats"]
       }
     },
     {
       "name": "@svgframe/plugin-command-dir",
-      "entry": "builtin:command-dir",
+      "module": "./dist/plugins/command-dir/src/index.js",
       "contributes": {
         "commands": ["dir"]
       }

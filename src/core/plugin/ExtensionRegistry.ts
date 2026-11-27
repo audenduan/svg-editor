@@ -112,6 +112,24 @@ export class ExtensionRegistry implements PluginContext {
     }
   }
 
+  /**
+   * **暂存区**里的四类名称（尚未提交）。
+   *
+   * 供清单校验使用：插件在 `activate` 里注册了什么，必须以"暂存区里到底有什么"
+   * 为准去和清单声明比对，而不是等提交之后再回查（那时已无法区分是哪个插件注册的）。
+   */
+  public stagedNames(): Readonly<Record<ExtensionCategory, readonly string[]>> {
+    const pending = this.pending ?? [];
+    const collect = (category: ExtensionCategory): readonly string[] =>
+      pending.filter((item) => item.category === category).map((item) => item.name);
+    return {
+      shapes: collect('shapes'),
+      commands: collect('commands'),
+      decorators: collect('decorators'),
+      attributes: collect('attributes'),
+    };
+  }
+
   public registeredNames(category: ExtensionCategory): readonly string[] {
     switch (category) {
       case 'shapes':

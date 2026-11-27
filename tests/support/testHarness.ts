@@ -25,7 +25,11 @@ export interface TestHarness {
 export function createHarness(plugins: readonly Plugin[] = []): TestHarness {
   const files = new MemoryFileStore();
   const out = new BufferOutput();
-  const assembled = assembleCli({ fileStore: files, output: out, plugins });
+  const assembled = assembleCli({
+    fileStore: files,
+    output: out,
+    plugins: plugins.map((plugin) => ({ plugin })),
+  });
   return {
     session: assembled.session,
     app: assembled.application,
